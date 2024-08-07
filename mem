@@ -49,6 +49,13 @@
 ### Overview
 
 ```cpp
+static_assert(mem::allocator<std::allocator<int>>);
+static_assert(mem::allocator<mem::stack_allocator<int, 1024u>>);
+static_assert(mem::allocator<mem::huge_page_allocator<int>>);
+static_assert(mem::allocator<mem::numa_allocator<int>>);
+```
+
+```cpp
 std::vector<int, mem::stack_allocator<int, 1024u>> v{};
 v.push_back(42);
 ```
