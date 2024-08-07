@@ -60,7 +60,7 @@ v.push_back(42);
 ```
 
 ```cpp
-// -lnuma
+// -lnuma (requires libnuma-dev)
 std::vector<int, mem::numa_allocator<int>> v{};
 v.push_back(42);
 ```
@@ -347,8 +347,6 @@ struct numa_allocator {
 
 #ifndef NTEST
 static_assert(([] {
-  constexpr auto expect = [](bool cond) { if (not cond) { void failed(); failed(); } };
-
   // mem::allocator
   {
     static_assert(not mem::allocator<void>);
