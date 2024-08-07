@@ -24,8 +24,8 @@
 #if 0
 // -->
 [![MIT Licence](http://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/license/mit)
-[![Version](https://badge.fury.io/gh/qlibs%2Fjmp.svg)](https://github.com/qlibs/mem/releases)
-[![build](https://img.shields.io/badge/build-blue.svg)]()
+[![Version](https://badge.fury.io/gh/qlibs%2Fmem.svg)](https://github.com/qlibs/mem/releases)
+[![build](https://img.shields.io/badge/build-blue.svg)](https://godbolt.org/z/GKzWcr9Mj)
 [![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)]()
 
 ---------------------------------------
@@ -54,13 +54,13 @@ v.push_back(42);
 ```
 
 ```cpp
-/// echo 20 > /proc/sys/vm/nr_hugepages
+// echo 20 > /proc/sys/vm/nr_hugepages
 std::vector<int, mem::huge_page_allocator<int>> v{};
 v.push_back(42);
 ```
 
 ```cpp
-/// -lnuma
+// -lnuma
 std::vector<int, mem::numa_allocator<int>> v{};
 v.push_back(42);
 ```
@@ -70,79 +70,77 @@ v.push_back(42);
 ### API
 
 ```cpp
-namespace mem {
-  template<class TAllocator>
-  concept allocator = requires(TAllocator alloc,
-                               typename TAllocator::value_type* ptr,
-                               std::size_t n) {
-    typename TAllocator::value_type;
-    { alloc.allocate(n) } -> std::same_as<decltype(ptr)>;
-    { alloc.deallocate(ptr, n) } -> std::same_as<void>;
-    #if __cpp_lib_allocate_at_least >= 202302L
-    { allocate_at_least(n) } -> std::same_as<std::allocation_result<T*, std::size_t>>;
-    #endif
-  };
+template<class TAllocator>
+concept allocator = requires(TAllocator alloc,
+                             typename TAllocator::value_type* ptr,
+                             std::size_t n) {
+  typename TAllocator::value_type;
+  { alloc.allocate(n) } -> std::same_as<decltype(ptr)>;
+  { alloc.deallocate(ptr, n) } -> std::same_as<void>;
+  #if __cpp_lib_allocate_at_least >= 202302L
+  { allocate_at_least(n) } -> std::same_as<std::allocation_result<T*, std::size_t>>;
+  #endif
+};
 
-  template<class T,
-           std::size_t N,
-           std::size_t alignment = alignof(T),
-           auto on_error = [] { return nullptr; }>
-    requires (alignment <= alignof(std::max_align_t)) and (not (N % alignment))
-  struct stack_allocator {
-    using value_type = T;
+template<class T,
+         std::size_t N,
+         std::size_t alignment = alignof(T),
+         auto on_error = [] { return nullptr; }>
+  requires (alignment <= alignof(std::max_align_t)) and (not (N % alignment))
+struct stack_allocator {
+  using value_type = T;
 
-    constexpr stack_allocator() noexcept = default;
+  constexpr stack_allocator() noexcept = default;
 
-    [[nodiscard]] constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T*;
+  [[nodiscard]] constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T*;
 
-    #if __cpp_lib_allocate_at_least >= 202302L
-    constexpr std::allocation_result<T*, std::size_t>
-    allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n));
-    #endif
+  #if __cpp_lib_allocate_at_least >= 202302L
+  constexpr std::allocation_result<T*, std::size_t>
+  allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n));
+  #endif
 
-    constexpr void deallocate(T* ptr, std::size_t n) noexcept;
-  };
+  constexpr void deallocate(T* ptr, std::size_t n) noexcept;
+};
 
-  template <class T,
-            std::size_t N = (1u << 21u),
-            auto on_error = [] { return nullptr; }>
-  struct huge_page_allocator {
-    using value_type = T;
+template <class T,
+          std::size_t N = (1u << 21u),
+          auto on_error = [] { return nullptr; }>
+struct huge_page_allocator {
+  using value_type = T;
 
-    constexpr huge_page_allocator() noexcept = default;
+  constexpr huge_page_allocator() noexcept = default;
 
-    [[nodiscard]] constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T*;
+  [[nodiscard]] constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T*;
 
-    #if __cpp_lib_allocate_at_least >= 202302L
-    constexpr std::allocation_result<T*, std::size_t>
-    allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n));
-    #endif
+  #if __cpp_lib_allocate_at_least >= 202302L
+  constexpr std::allocation_result<T*, std::size_t>
+  allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n));
+  #endif
 
-    constexpr void deallocate(T *ptr, std::size_t n) noexcept;
-  };
+  constexpr void deallocate(T *ptr, std::size_t n) noexcept;
+};
 
-  template<class T, auto on_error = [] { return nullptr; }>
-  struct numa_allocator {
-    using value_type = T;
+template<class T, auto on_error = [] { return nullptr; }>
+struct numa_allocator {
+  using value_type = T;
 
-    constexpr numa_allocator(node_type node = {}) noexcept;
+  constexpr numa_allocator(node_type node = {}) noexcept;
 
-    /**
-     * The size argument (n) will be rounded up to a multiple of the system page size.
-     */
-    [[nodiscard]] constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T*;
+  /**
+   * The size argument (n) will be rounded up to a multiple of the system page size.
+   */
+  [[nodiscard]] constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T*;
 
-    /**
-     * The size argument (n) will be rounded up to a multiple of the system page size.
-     */
-    constexpr void deallocate(T* ptr, std::size_t n) noexcept;
+  /**
+   * The size argument (n) will be rounded up to a multiple of the system page size.
+   */
+  constexpr void deallocate(T* ptr, std::size_t n) noexcept;
 
-    #if __cpp_lib_allocate_at_least >= 202302L
-    constexpr std::allocation_result<T*, std::size_t>
-    allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n));
-    #endif
-  };
-} // mem
+  #if __cpp_lib_allocate_at_least >= 202302L
+  constexpr std::allocation_result<T*, std::size_t>
+  allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n));
+  #endif
+};
 ```
 
 ---
@@ -153,27 +151,29 @@ namespace mem {
 
     ```
     CPMAddPackage(
-      Name jmp
-      GITHUB_REPOSITORY qlibs/jmp
-      GIT_TAG v5.0.0
+      Name mem
+      GITHUB_REPOSITORY qlibs/mem
+      GIT_TAG v1.0.0
     )
     add_library(mp INTERFACE)
     target_include_directories(mp SYSTEM INTERFACE ${mp_SOURCE_DIR})
-    add_library(jmp::jmp ALIAS jmp)
+    add_library(mem::mem ALIAS mem)
     ```
 
     ```
-    target_link_libraries(${PROJECT_NAME} jmp::jmp)
+    target_link_libraries(${PROJECT_NAME} mem::mem)
     ```
 
 - Acknowledgments
 
   > - https://en.cppreference.com/w/cpp/memory/allocator
+
   > - https://www.kernel.org/doc/html/latest/admin-guide/mm/hugetlbpage.html
   > - https://www.man7.org/linux/man-pages/man2/mmap.2.html
   > - https://www.intel.com/content/www/us/en/docs/programmable/683840/1-2-1/enabling-hugepages.html
   > - https://github.com/libhugetlbfs/libhugetlbfs
   > - https://wiki.debian.org/Hugepages
+
   > - https://en.wikipedia.org/wiki/Non-uniform_memory_access
   > - https://man7.org/linux/man-pages/man3/numa.3.html
   > - https://www.intel.com/content/www/us/en/developer/articles/technical/use-intel-quickassist-technology-efficiently-with-numa-awareness.html
@@ -220,7 +220,7 @@ struct stack_allocator {
 
   [[nodiscard]] constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T* {
     const auto aligned = align(n * sizeof(T));
-    if ((data.data() + N - sp) < align(n * sizeof(T))) [[unlikely]] {
+    if (std::size_t(data.data() + N - sp) < align(n * sizeof(T))) [[unlikely]] {
       return on_error();
     }
     auto ptr = std::bit_cast<T*>(sp);
@@ -373,6 +373,7 @@ static_assert(([] {
     static_assert(sizeof(mem::stack_allocator<int, 16u>) >= sizeof(std::array<std::byte, 16u>));
   }
 
+  #if __has_include(<sys/mman.h>)
   // mem::huge_page_allocator
   {
     struct empty { };
@@ -382,12 +383,15 @@ static_assert(([] {
     mem::huge_page_allocator<int> allocator{};
     static_assert(1u << 21u == allocator.size);
   }
+  #endif
 
+  #if __has_include(<numa.h>)
   // mem::numa_allocator
   {
     static_assert([]<class T, auto... Vs> { return requires { mem::numa_allocator<T, Vs...>{}; }; }.template operator()<int>());
     static_assert([]<class T, auto... Vs> { return requires { mem::numa_allocator<T, Vs...>{}; }; }.template operator()<int, 32u>());
     static_assert(sizeof(mem::numa_allocator<int>::node_type) == sizeof(mem::numa_allocator<int>));
   }
+  #endif
 }(), true));
 #endif // NTEST
