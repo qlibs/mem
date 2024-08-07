@@ -164,6 +164,7 @@ struct numa_allocator {
 
 - Acknowledgments
 
+  > - https://eel.is/c++draft/allocator.requirements
   > - https://en.cppreference.com/w/cpp/memory/allocator
 
   > - https://www.kernel.org/doc/html/latest/admin-guide/mm/hugetlbpage.html
