@@ -57,19 +57,16 @@ static_assert(mem::allocator<mem::numa_allocator<int>>);
 
 ```cpp
 std::vector<int, mem::stack_allocator<int, 1024u>> v{};
-v.push_back(42);
 ```
 
 ```cpp
 // echo 20 > /proc/sys/vm/nr_hugepages
 std::vector<int, mem::huge_page_allocator<int>> v{};
-v.push_back(42);
 ```
 
 ```cpp
 // -lnuma (requires libnuma-dev)
 std::vector<int, mem::numa_allocator<int>> v{};
-v.push_back(42);
 ```
 
 ---
