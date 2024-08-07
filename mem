@@ -32,7 +32,7 @@
 
 ## mem: memory allocators
 
-> https://en.wikipedia.org/wiki/Allocator_(C%2B%2B)
+> [https://en.wikipedia.org/wiki/Allocator_C++](https://en.wikipedia.org/wiki/Allocator_(C%2B%2B))
 
 ### Features
 
