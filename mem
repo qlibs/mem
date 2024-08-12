@@ -155,11 +155,11 @@ struct numa_allocator {
     )
     add_library(mp INTERFACE)
     target_include_directories(mp SYSTEM INTERFACE ${mp_SOURCE_DIR})
-    add_library(mem::mem ALIAS mem)
+    add_library(qlibs::mem ALIAS mem)
     ```
 
     ```
-    target_link_libraries(${PROJECT_NAME} mem::mem)
+    target_link_libraries(${PROJECT_NAME} qlibs::mem)
     ```
 
 - Acknowledgments
