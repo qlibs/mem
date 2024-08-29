@@ -177,7 +177,7 @@ struct numa_allocator {
     FetchContent_Declare(
       qlibs.mem
       GIT_REPOSITORY https://github.com/qlibs/mem
-      GIT_TAG v1.0.0
+      GIT_TAG v1.0.1
     )
 
     FetchContent_MakeAvailable(qlibs.mem)
@@ -224,7 +224,7 @@ struct numa_allocator {
 #include <cstdint>
 #include <cstddef>
 
-namespace mem::inline v1_0_0 {
+namespace mem::inline v1_0_1 {
 template<class TAllocator>
 concept allocator = requires(TAllocator alloc, typename TAllocator::value_type* ptr, std::size_t n) {
   typename TAllocator::value_type;
@@ -236,7 +236,7 @@ concept allocator = requires(TAllocator alloc, typename TAllocator::value_type* 
 };
 } // mem
 
-namespace mem::inline v1_0_0 {
+namespace mem::inline v1_0_1 {
 template<class T, std::size_t N, std::size_t alignment = alignof(T), auto on_error = [] { return nullptr; }>
   requires (alignment <= alignof(std::max_align_t)) and (not (N % alignment))
 struct stack_allocator {
@@ -281,7 +281,7 @@ struct stack_allocator {
 
 #if __has_include(<sys/mman.h>)
 #include <sys/mman.h>
-namespace mem::inline v1_0_0 {
+namespace mem::inline v1_0_1 {
 /**
  * `echo 20 > /proc/sys/vm/nr_hugepages`
  * https://www.kernel.org/doc/html/latest/admin-guide/mm/hugetlbpage.html
@@ -331,7 +331,7 @@ struct huge_page_allocator {
 #if __has_include(<sys/mman.h>) and __has_include(<cstdlib>)
 #include <sys/mman.h>
 #include <cstdlib>
-namespace mem::inline v1_0_0 {
+namespace mem::inline v1_0_1 {
 /**
  * `echo always > /sys/kernel/mm/transparent_hugepage/hugepages-2048kB/enabled`
  * https://www.kernel.org/doc/html/latest/admin-guide/mm/transhuge.html
@@ -380,7 +380,7 @@ struct transparent_huge_page_allocator {
 
 #if __has_include(<numa.h>)
 #include <numa.h>
-namespace mem::inline v1_0_0 {
+namespace mem::inline v1_0_1 {
 /**
  * `-lnuma`
  * https://en.wikipedia.org/wiki/Non-uniform_memory_access
