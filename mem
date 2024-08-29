@@ -190,14 +190,14 @@ struct numa_allocator {
 - Acknowledgments
 
   > std::allocator
-    > - https://eel.is/c++draft/allocator.requirements,
+    > - https://eel.is/c++draft/allocator.requirements
     > - https://en.cppreference.com/w/cpp/memory/allocator
 
   > Huge Pages (HP)
-    > - https://www.kernel.org/doc/html/latest/admin-guide/mm/hugetlbpage.html,
-    > - https://www.man7.org/linux/man-pages/man2/mmap.2.html,
-    > - https://www.intel.com/content/www/us/en/docs/programmable/683840/1-2-1/enabling-hugepages.html,
-    > - https://github.com/libhugetlbfs/libhugetlbfs,
+    > - https://www.kernel.org/doc/html/latest/admin-guide/mm/hugetlbpage.html
+    > - https://www.man7.org/linux/man-pages/man2/mmap.2.html
+    > - https://www.intel.com/content/www/us/en/docs/programmable/683840/1-2-1/enabling-hugepages.html
+    > - https://github.com/libhugetlbfs/libhugetlbfs
     > - https://wiki.debian.org/Hugepages
 
   > Transparent Huge Pages (THP)
@@ -206,8 +206,8 @@ struct numa_allocator {
     > - https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/6/html/performance_tuning_guide/s-memory-transhuge
 
   > Non Uniform Memory Access (NUMA)
-    > - https://en.wikipedia.org/wiki/Non-uniform_memory_access,
-    > - https://man7.org/linux/man-pages/man3/numa.3.html,
+    > - https://en.wikipedia.org/wiki/Non-uniform_memory_access
+    > - https://man7.org/linux/man-pages/man3/numa.3.html
     > - https://www.intel.com/content/www/us/en/developer/articles/technical/use-intel-quickassist-technology-efficiently-with-numa-awareness.html
 <!--
 #endif
