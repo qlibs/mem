@@ -23,7 +23,7 @@
 //
 #if 0
 // -->
-[Overview](#Overview) / [Examples](#Examples) / [API](#API)
+[Overview](#Overview) / [Examples](#Examples) / [API](#API) / [FAQ](#FAQ)
 
 ## MEM: Memory Allocators
 
@@ -166,6 +166,8 @@ struct numa_allocator {
 ```
 
 ---
+
+### FAQ
 
 - Acknowledgments
 
