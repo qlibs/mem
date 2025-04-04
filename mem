@@ -23,7 +23,7 @@
 //
 #if 0
 // -->
-[Overview](#Overview) / [Examples](#Examples) / [API](#API) / [FAQ](#FAQ)
+[Overview](#Overview) / [Examples](#Examples) / [API](#API)
 
 ## MEM: Memory Allocators
 
@@ -36,9 +36,9 @@
 
 ### Features
 
-- Single header (https://raw.githubusercontent.com/qlibs/mem/main/mem - for integration see [FAQ](#faq))
+- Single header (https://raw.githubusercontent.com/qlibs/mem/main/mem)
 - Minimal [API](#api)
-- Verifies itself upon include (can be disabled with `-DNTEST` - see [FAQ](#faq))
+- Verifies itself upon include (can be disabled with `-DNTEST`)
 
 ### Requirements
 
@@ -166,26 +166,6 @@ struct numa_allocator {
 ```
 
 ---
-
-### FAQ
-
-- How to integrate with [CMake.FetchContent](https://cmake.org/cmake/help/latest/module/FetchContent.html)?
-
-    ```
-    include(FetchContent)
-
-    FetchContent_Declare(
-      qlibs.mem
-      GIT_REPOSITORY https://github.com/qlibs/mem
-      GIT_TAG v1.0.1
-    )
-
-    FetchContent_MakeAvailable(qlibs.mem)
-    ```
-
-    ```
-    target_link_libraries(${PROJECT_NAME} PUBLIC qlibs.mem);
-    ```
 
 - Acknowledgments
 
