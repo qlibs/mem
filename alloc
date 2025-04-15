@@ -23,14 +23,14 @@
 //
 #if 0
 // -->
-[Overview](#Overview) / [Examples](#Examples) / [API](#API) / [FAQ](#FAQ)
+[Overview](#Overview) / [API](#API) / [FAQ](#FAQ)
 
-## alloc: memory allocators
+## alloc: Memory Allocators library
 
 [![MIT Licence](http://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/license/mit)
 [![Version](https://img.shields.io/github/v/release/qlibs/alloc)](https://github.com/qlibs/alloc/releases)
-[![Build](https://img.shields.io/badge/build-green.svg)](https://godbolt.org/z/ensvKohTs)
-[![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)](https://godbolt.org/z/EhvvnnGvE)
+[![Build](https://img.shields.io/badge/build-green.svg)](https://godbolt.org/z/nE538GxM6)
+[![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)](https://godbolt.org/z/MYY5e7Yro)
 
   > [https://en.wikipedia.org/wiki/Allocator_C++](https://en.wikipedia.org/wiki/Allocator_(C%2B%2B))
 
@@ -206,7 +206,7 @@ struct numa {
 #include <cstdint>
 #include <cstddef>
 
-namespace alloc::inline v1_0_1 {
+namespace alloc::inline v1_0_2 {
 template<class TAllocator>
 concept allocator = requires(TAllocator alloc, typename TAllocator::value_type* ptr, std::size_t n) {
   typename TAllocator::value_type;
@@ -218,7 +218,7 @@ concept allocator = requires(TAllocator alloc, typename TAllocator::value_type* 
 };
 } // mem
 
-namespace alloc::inline v1_0_1 {
+namespace alloc::inline v1_0_2 {
 template<class T, std::size_t N, std::size_t alignment = alignof(T), auto on_error = [] { return nullptr; }>
   requires (alignment <= alignof(std::max_align_t)) and (not (N % alignment))
 struct stack {
@@ -263,7 +263,7 @@ struct stack {
 
 #if __has_include(<sys/mman.h>)
 #include <sys/mman.h>
-namespace alloc::inline v1_0_1 {
+namespace alloc::inline v1_0_2 {
 /**
  * `echo 20 > /proc/sys/vm/nr_hugepages`
  * https://www.kernel.org/doc/html/latest/admin-guide/mm/hugetlbpage.html
@@ -313,7 +313,7 @@ struct huge_pages {
 #if __has_include(<sys/mman.h>) and __has_include(<cstdlib>)
 #include <sys/mman.h>
 #include <cstdlib>
-namespace alloc::inline v1_0_1 {
+namespace alloc::inline v1_0_2 {
 /**
  * `echo always > /sys/kernel/mm/transparent_hugepage/hugepages-2048kB/enabled`
  * https://www.kernel.org/doc/html/latest/admin-guide/mm/transhuge.html
@@ -362,7 +362,7 @@ struct transparent_huge_pages {
 
 #if __has_include(<numa.h>)
 #include <numa.h>
-namespace alloc::inline v1_0_1 {
+namespace alloc::inline v1_0_2 {
 /**
  * `-lnuma`
  * https://en.wikipedia.org/wiki/Non-uniform_memory_access
