@@ -25,7 +25,7 @@
 // -->
 [Overview](#Overview) / [API](#API) / [FAQ](#FAQ)
 
-## ALLOC: Memory Allocators library
+## ALLOC: Memory Allocator library
 
 [![MIT Licence](http://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/license/mit)
 [![Version](https://img.shields.io/github/v/release/qlibs/alloc)](https://github.com/qlibs/alloc/releases)
