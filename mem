@@ -23,9 +23,9 @@
 //
 #if 0
 // -->
-[Overview](#Overview) / [API](#API) / [FAQ](#FAQ)
+[Overview](#Overview) / [API](#API) / [FAQ](#FAQ) / [Resources](#Resources)
 
-## ALLOC: Memory Allocator library
+## MEM: Memory Allocator library
 
 [![MIT Licence](http://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/license/mit)
 [![Version](https://img.shields.io/github/v/release/qlibs/alloc)](https://github.com/qlibs/alloc/releases)
@@ -36,9 +36,9 @@
 
 ### Features
 
-- Single header (https://raw.githubusercontent.com/qlibs/alloc/main/alloc)
+- Single header (https://raw.githubusercontent.com/qlibs/alloc/main/alloc) / C++20 module (https://raw.githubusercontent.com/qlibs/alloc/main/alloc.cppm)
 - Minimal [API](#api)
-- Verifies itself upon include (can be disabled with `-DNTEST`)
+- Verifies itself upon include (can be disabled with `-DNTEST` - see [FAQ](#faq))
 
 ### Requirements
 
@@ -49,30 +49,30 @@
 ### Overview
 
 ```cpp
-static_assert(alloc::allocator<std::allocator<int>>);
-static_assert(alloc::allocator<alloc::stack<int, 1024u>>);
-static_assert(alloc::allocator<alloc::huge_pages<int>>);
-static_assert(alloc::allocator<alloc::transparent_huge_pages<int>>);
-static_assert(alloc::allocator<alloc::numa<int>>);
+static_assert(mem::allocator<std::allocator<int>>);
+static_assert(mem::allocator<mem::stack<int, 1024u>>);
+static_assert(mem::allocator<mem::huge_pages<int>>);
+static_assert(mem::allocator<mem::transparent_huge_pages<int>>);
+static_assert(mem::allocator<mem::numa<int>>);
 ```
 
 ```cpp
-std::vector<int, alloc::stack<int, 1024u>> v{};
+std::vector<int, mem::stack<int, 1024u>> v{};
 ```
 
 ```cpp
 // echo 20 > /proc/sys/vm/nr_hugepages
-std::vector<int, alloc::huge_pages<int>> v{};
+std::vector<int, mem::huge_pages<int>> v{};
 ```
 
 ```cpp
 // echo always > /sys/kernel/mm/transparent_hugepage/hugepages-2048kB/enabled
-std::vector<int, alloc::transparent_huge_pages<int>> v{};
+std::vector<int, mem::transparent_huge_pages<int>> v{};
 ```
 
 ```cpp
 // -lnuma (requires libnuma-dev)
-std::vector<int, alloc::numa<int>> v{};
+std::vector<int, mem::numa<int>> v{};
 ```
 
 ---
@@ -169,28 +169,38 @@ struct numa {
 
 ### FAQ
 
-- Acknowledgments
+> - How to disable running tests at compile-time?
+>
+>     > When `-DNTEST` is defined static_asserts tests wont be executed upon inclusion.
+>       Note: Use with caution as disabling tests means that there are no gurantees upon inclusion that given compiler/env combination works as expected.
+>
+> - Similar projects?
+>
+>     > [std::pmr](https://en.cppreference.com/w/cpp/header/memory)
 
-  > std::allocator
-    > - https://eel.is/c++draft/allocator.requirements
-    > - https://en.cppreference.com/w/cpp/memory/allocator
+### Resources
 
-  > Huge Pages (HP)
-    > - https://www.kernel.org/doc/html/latest/admin-guide/mm/hugetlbpage.html
-    > - https://www.man7.org/linux/man-pages/man2/mmap.2.html
-    > - https://www.intel.com/content/www/us/en/docs/programmable/683840/1-2-1/enabling-hugepages.html
-    > - https://github.com/libhugetlbfs/libhugetlbfs
-    > - https://wiki.debian.org/Hugepages
+> std::allocator
+> - https://eel.is/c++draft/allocator.requirements
+> - https://en.cppreference.com/w/cpp/memory/allocator
 
-  > Transparent Huge Pages (THP)
-    > - https://www.kernel.org/doc/html/latest/admin-guide/mm/transhuge.html
-    > - https://man7.org/linux/man-pages/man2/madvise.2.html
-    > - https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/6/html/performance_tuning_guide/s-memory-transhuge
+> Huge Pages
+> - https://www.kernel.org/doc/html/latest/admin-guide/mm/hugetlbpage.html
+> - https://www.man7.org/linux/man-pages/man2/mmap.2.html
+> - https://www.intel.com/content/www/us/en/docs/programmable/683840/1-2-1/enabling-hugepages.html
+> - https://github.com/libhugetlbfs/libhugetlbfs
+> - https://wiki.debian.org/Hugepages
 
-  > Non Uniform Memory Access (NUMA)
-    > - https://en.wikipedia.org/wiki/Non-uniform_memory_access
-    > - https://man7.org/linux/man-pages/man3/numa.3.html
-    > - https://www.intel.com/content/www/us/en/developer/articles/technical/use-intel-quickassist-technology-efficiently-with-numa-awareness.html
+> Transparent Huge Pages
+> - https://www.kernel.org/doc/html/latest/admin-guide/mm/transhuge.html
+> - https://man7.org/linux/man-pages/man2/madvise.2.html
+> - https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/6/html/performance_tuning_guide/s-memory-transhuge
+
+> Non Uniform Memory Access
+> - https://en.wikipedia.org/wiki/Non-uniform_memory_access
+> - https://man7.org/linux/man-pages/man3/numa.3.html
+> - https://www.intel.com/content/www/us/en/developer/articles/technical/use-intel-quickassist-technology-efficiently-with-numa-awareness.html
+
 <!--
 #endif
 
@@ -206,7 +216,7 @@ struct numa {
 #include <cstdint>
 #include <cstddef>
 
-namespace alloc::inline v1_0_2 {
+namespace mem::inline v1_0_3 {
 template<class TAllocator>
 concept allocator = requires(TAllocator alloc, typename TAllocator::value_type* ptr, std::size_t n) {
   typename TAllocator::value_type;
@@ -218,7 +228,7 @@ concept allocator = requires(TAllocator alloc, typename TAllocator::value_type* 
 };
 } // mem
 
-namespace alloc::inline v1_0_2 {
+namespace mem::inline v1_0_3 {
 template<class T, std::size_t N, std::size_t alignment = alignof(T), auto on_error = [] { return nullptr; }>
   requires (alignment <= alignof(std::max_align_t)) and (not (N % alignment))
 struct stack {
@@ -263,7 +273,7 @@ struct stack {
 
 #if __has_include(<sys/mman.h>)
 #include <sys/mman.h>
-namespace alloc::inline v1_0_2 {
+namespace mem::inline v1_0_3 {
 /**
  * `echo 20 > /proc/sys/vm/nr_hugepages`
  * https://www.kernel.org/doc/html/latest/admin-guide/mm/hugetlbpage.html
@@ -313,7 +323,7 @@ struct huge_pages {
 #if __has_include(<sys/mman.h>) and __has_include(<cstdlib>)
 #include <sys/mman.h>
 #include <cstdlib>
-namespace alloc::inline v1_0_2 {
+namespace mem::inline v1_0_3 {
 /**
  * `echo always > /sys/kernel/mm/transparent_hugepage/hugepages-2048kB/enabled`
  * https://www.kernel.org/doc/html/latest/admin-guide/mm/transhuge.html
@@ -362,7 +372,7 @@ struct transparent_huge_pages {
 
 #if __has_include(<numa.h>)
 #include <numa.h>
-namespace alloc::inline v1_0_2 {
+namespace mem::inline v1_0_3 {
 /**
  * `-lnuma`
  * https://en.wikipedia.org/wiki/Non-uniform_memory_access
@@ -410,60 +420,60 @@ struct numa {
 
 #ifndef NTEST
 static_assert(([] {
-  // alloc::allocator
+  // mem::allocator
   {
-    static_assert(not alloc::allocator<void>);
-    static_assert(not alloc::allocator<int>);
-    static_assert(alloc::allocator<std::allocator<int>>);
-    static_assert(alloc::allocator<alloc::stack<int, 1024u>>);
+    static_assert(not mem::allocator<void>);
+    static_assert(not mem::allocator<int>);
+    static_assert(mem::allocator<std::allocator<int>>);
+    static_assert(mem::allocator<mem::stack<int, 1024u>>);
     #if __has_include(<sys/mman.h>)
-    static_assert(alloc::allocator<alloc::huge_pages<int>>);
+    static_assert(mem::allocator<mem::huge_pages<int>>);
     #endif
     #if __has_include(<numa.h>)
-    static_assert(alloc::allocator<alloc::numa<int>>);
+    static_assert(mem::allocator<mem::numa<int>>);
     #endif
   }
 
-  // alloc::stack
+  // mem::stack
   {
-    static_assert(not []<class T, auto... Vs> { return requires { alloc::stack<T, Vs...>{}; }; }.template operator()<int, 1u>());
-    static_assert(not []<class T, auto... Vs> { return requires { alloc::stack<T, Vs...>{}; }; }.template operator()<int, 2u>());
-    static_assert(not []<class T, auto... Vs> { return requires { alloc::stack<T, Vs...>{}; }; }.template operator()<int, sizeof(int), 1u + alignof(std::max_align_t)>());
-    static_assert([]<class T, auto... Vs> { return requires { alloc::stack<T, Vs...>{}; }; }.template operator()<int, sizeof(int) * 8u>());
-    static_assert([]<class T, auto... Vs> { return requires { alloc::stack<T, Vs...>{}; }; }.template  operator()<int, alignof(int)>());
-    static_assert(sizeof(alloc::stack<int, 16u>) >= sizeof(std::array<std::byte, 16u>));
+    static_assert(not []<class T, auto... Vs> { return requires { mem::stack<T, Vs...>{}; }; }.template operator()<int, 1u>());
+    static_assert(not []<class T, auto... Vs> { return requires { mem::stack<T, Vs...>{}; }; }.template operator()<int, 2u>());
+    static_assert(not []<class T, auto... Vs> { return requires { mem::stack<T, Vs...>{}; }; }.template operator()<int, sizeof(int), 1u + alignof(std::max_align_t)>());
+    static_assert([]<class T, auto... Vs> { return requires { mem::stack<T, Vs...>{}; }; }.template operator()<int, sizeof(int) * 8u>());
+    static_assert([]<class T, auto... Vs> { return requires { mem::stack<T, Vs...>{}; }; }.template  operator()<int, alignof(int)>());
+    static_assert(sizeof(mem::stack<int, 16u>) >= sizeof(std::array<std::byte, 16u>));
   }
 
   #if __has_include(<sys/mman.h>)
-  // alloc::huge_pages
+  // mem::huge_pages
   {
     struct empty { };
-    static_assert([]<class T, auto... Vs> { return requires { alloc::huge_pages<T, Vs...>{}; }; }.template operator()<int>());
-    static_assert([]<class T, auto... Vs> { return requires { alloc::huge_pages<T, Vs...>{}; }; }.template operator()<int, 32u>());
-    static_assert(sizeof(empty) == sizeof(alloc::huge_pages<int>));
-    alloc::huge_pages<int> allocator{};
+    static_assert([]<class T, auto... Vs> { return requires { mem::huge_pages<T, Vs...>{}; }; }.template operator()<int>());
+    static_assert([]<class T, auto... Vs> { return requires { mem::huge_pages<T, Vs...>{}; }; }.template operator()<int, 32u>());
+    static_assert(sizeof(empty) == sizeof(mem::huge_pages<int>));
+    mem::huge_pages<int> allocator{};
     static_assert(1u << 21u == allocator.size);
   }
   #endif
 
   #if __has_include(<sys/mman.h>) and __has_include(<cstdlib>)
-  // alloc::transparent_huge_pages
+  // mem::transparent_huge_pages
   {
     struct empty { };
-    static_assert([]<class T, auto... Vs> { return requires { alloc::transparent_huge_pages<T, Vs...>{}; }; }.template operator()<int>());
-    static_assert([]<class T, auto... Vs> { return requires { alloc::transparent_huge_pages<T, Vs...>{}; }; }.template operator()<int, 32u>());
-    static_assert(sizeof(empty) == sizeof(alloc::huge_pages<int>));
-    alloc::transparent_huge_pages<int> allocator{};
+    static_assert([]<class T, auto... Vs> { return requires { mem::transparent_huge_pages<T, Vs...>{}; }; }.template operator()<int>());
+    static_assert([]<class T, auto... Vs> { return requires { mem::transparent_huge_pages<T, Vs...>{}; }; }.template operator()<int, 32u>());
+    static_assert(sizeof(empty) == sizeof(mem::huge_pages<int>));
+    mem::transparent_huge_pages<int> allocator{};
     static_assert(1u << 21u == allocator.size);
   }
   #endif
 
   #if __has_include(<numa.h>)
-  // alloc::numa
+  // mem::numa
   {
-    static_assert([]<class T, auto... Vs> { return requires { alloc::numa<T, Vs...>{}; }; }.template operator()<int>());
-    static_assert([]<class T, auto... Vs> { return requires { alloc::numa<T, Vs...>{}; }; }.template operator()<int, 32u>());
-    static_assert(sizeof(alloc::numa<int>::node_type) == sizeof(alloc::numa<int>));
+    static_assert([]<class T, auto... Vs> { return requires { mem::numa<T, Vs...>{}; }; }.template operator()<int>());
+    static_assert([]<class T, auto... Vs> { return requires { mem::numa<T, Vs...>{}; }; }.template operator()<int, 32u>());
+    static_assert(sizeof(mem::numa<int>::node_type) == sizeof(mem::numa<int>));
   }
   #endif
 }(), true));
