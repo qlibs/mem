@@ -164,6 +164,7 @@ struct numa {
 ### FAQ
 
 > - How to disable running tests at compile-time?
+>
 >   When `-DNTEST` is defined static_asserts tests wont be executed upon inclusion.
 >   Note: Use with caution as disabling tests means that there are no gurantees upon inclusion that given compiler/env combination works as expected.
 >
@@ -172,7 +173,7 @@ struct numa {
 
 ### Resources
 
-> std::allocator
+> `std::allocator`
 > - https://eel.is/c++draft/allocator.requirements
 > - https://en.cppreference.com/w/cpp/memory/allocator
 
