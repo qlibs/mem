@@ -29,8 +29,8 @@
 
 [![MIT Licence](http://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/license/mit)
 [![Version](https://img.shields.io/github/v/release/qlibs/alloc)](https://github.com/qlibs/alloc/releases)
-[![Build](https://img.shields.io/badge/build-green.svg)](https://godbolt.org/z/nE538GxM6)
-[![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)](https://godbolt.org/z/MYY5e7Yro)
+[![Build](https://img.shields.io/badge/build-green.svg)](https://godbolt.org/z/Yh6r9h9Pf)
+[![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)](https://godbolt.org/z/5h85h61P4)
 
   > [https://en.wikipedia.org/wiki/Allocator_C++](https://en.wikipedia.org/wiki/Allocator_(C%2B%2B))
 
@@ -43,8 +43,6 @@
 ### Requirements
 
 - C++20 ([clang++12+, g++11+](https://en.cppreference.com/w/cpp/compiler_support)) / [Linux](https://en.wikipedia.org/wiki/Linux)
-
----
 
 ### Overview
 
@@ -74,8 +72,6 @@ std::vector<int, mem::transparent_huge_pages<int>> v{};
 // -lnuma (requires libnuma-dev)
 std::vector<int, mem::numa<int>> v{};
 ```
-
----
 
 ### API
 
@@ -165,8 +161,6 @@ struct numa {
 };
 ```
 
----
-
 ### FAQ
 
 > - How to disable running tests at compile-time?
@@ -200,6 +194,10 @@ struct numa {
 > - https://en.wikipedia.org/wiki/Non-uniform_memory_access
 > - https://man7.org/linux/man-pages/man3/numa.3.html
 > - https://www.intel.com/content/www/us/en/developer/articles/technical/use-intel-quickassist-technology-efficiently-with-numa-awareness.html
+
+### License
+
+> - [MIT](LICENSE)
 
 <!--
 #endif
