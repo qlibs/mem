@@ -28,7 +28,7 @@
 ## MEM: Memory Allocator library
 
 [![MIT Licence](http://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/license/mit)
-[![Version](https://img.shields.io/github/v/release/qlibs/alloc)](https://github.com/qlibs/alloc/releases)
+[![Version](https://img.shields.io/github/v/release/qlibs/mem)](https://github.com/qlibs/mem/releases)
 [![Build](https://img.shields.io/badge/build-green.svg)](https://godbolt.org/z/Yh6r9h9Pf)
 [![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)](https://godbolt.org/z/5h85h61P4)
 
@@ -36,7 +36,7 @@
 
 ### Features
 
-- Single header (https://raw.githubusercontent.com/qlibs/alloc/main/alloc) / C++20 module (https://raw.githubusercontent.com/qlibs/alloc/main/alloc.cppm)
+- Single header (https://raw.githubusercontent.com/qlibs/mem/main/mem) / C++20 module (https://raw.githubusercontent.com/qlibs/mem/main/mem.cppm)
 - Minimal [API](#api)
 - Verifies itself upon include (can be disabled with `-DNTEST` - see [FAQ](#faq))
 
@@ -165,12 +165,12 @@ struct numa {
 
 > - How to disable running tests at compile-time?
 >
->     > When `-DNTEST` is defined static_asserts tests wont be executed upon inclusion.
->       Note: Use with caution as disabling tests means that there are no gurantees upon inclusion that given compiler/env combination works as expected.
+>   When `-DNTEST` is defined static_asserts tests wont be executed upon inclusion.
+>   Note: Use with caution as disabling tests means that there are no gurantees upon inclusion that given compiler/env combination works as expected.
 >
 > - Similar projects?
 >
->     > [std::pmr](https://en.cppreference.com/w/cpp/header/memory)
+>   [std::pmr](https://en.cppreference.com/w/cpp/header/memory)
 
 ### Resources
 
