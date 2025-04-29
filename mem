@@ -42,7 +42,7 @@
 
 ### Requirements
 
-- C++20 ([clang++12+, g++11+](https://en.cppreference.com/w/cpp/compiler_support)) / [`Linux`](https://en.wikipedia.org/wiki/Linux)\* / [`libnuma`](https://github.com/numactl/numactl)\*
+- C++20+ ([clang++12+, g++11+](https://en.cppreference.com/w/cpp/compiler_support)) / [`Linux`](https://en.wikipedia.org/wiki/Linux)\* / [`libnuma`](https://github.com/numactl/numactl)\*
 
 ### Overview
 
@@ -347,7 +347,7 @@ inline namespace allocator {
     }
 
    private:
-    alignas(std::size_t(alignment)) std::array<std::byte, N> data_{};
+    alignas([] { return std::size_t(alignment); }()) std::array<std::byte, N> data_{};
     std::byte* sp_{data_.data()};
   };
 
