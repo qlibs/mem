@@ -37,7 +37,7 @@
 ### Features
 
 - Single header (https://raw.githubusercontent.com/qlibs/mem/main/mem) / C++20 module (https://raw.githubusercontent.com/qlibs/mem/main/mem.cppm)
-- C++23 standard compliant [API](#api) / https://eel.is/c++draft/allocator.requirements
+- [C++23](https://eel.is/c++draft/allocator.requirements) standard compliant [API](#api)
 - Verifies itself upon include (can be disabled with `-DNTEST` - see [FAQ](#faq))
 
 ### Requirements
@@ -47,39 +47,32 @@
 ### Overview
 
 ```cpp
-static_assert(mem::allocator_like<std::allocator<int>>);
-static_assert(mem::allocator_like<mem::allocator::aligned<int, std::align_val_t(64u)>>);
-static_assert(mem::allocator_like<mem::allocator::stack<int, 1024u>>);
-static_assert(mem::allocator_like<mem::allocator::transparent_huge_pages<int>>);
-static_assert(mem::allocator_like<mem::allocator::huge_pages<int>>);
-static_assert(mem::allocator_like<mem::allocator::numa<int>>);
-```
+int main() {
+  /// concepts
+  static_assert(mem::allocator_like<std::allocator<int>>);
+  static_assert(mem::allocator_like<mem::allocator::aligned<int, std::align_val_t(64u)>>);
+  static_assert(mem::allocator_like<mem::allocator::stack<int, 1024u>>);
+  static_assert(mem::allocator_like<mem::allocator::transparent_huge_pages<int>>);
+  static_assert(mem::allocator_like<mem::allocator::huge_pages<int>>);
+  static_assert(mem::allocator_like<mem::allocator::numa<int>>);
 
-```cpp
-std::vector<int, mem::allocator::stack<int, 1024u>> v{};
-```
-
-```cpp
-// echo 20 > /proc/sys/vm/nr_hugepages
-std::vector<int, mem::allocator::huge_pages<int>> v{};
-```
-
-```cpp
-// echo always > /sys/kernel/mm/transparent_hugepage/hugepages-2048kB/enabled
-std::vector<int, mem::allocator::transparent_huge_pages<int>> v{};
-```
-
-```cpp
-// -lnuma (requires libnuma-dev)
-std::vector<int, mem::allocator::numa<int>> v{};
+  /// usage
+  std::vector<int, mem::allocator::aligned<int, std::align_val_t(64u)>> v{};
+  std::vector<int, mem::allocator::stack<int, 1024u>> v{};
+  /// echo 20 > /proc/sys/vm/nr_hugepages
+  std::vector<int, mem::allocator::huge_pages<int>> v{};
+  /// echo always > /sys/kernel/mm/transparent_hugepage/hugepages-2048kB/enabled
+  std::vector<int, mem::allocator::transparent_huge_pages<int>> v{};
+  /// -lnuma (requires libnuma-dev)
+  std::vector<int, mem::allocator::numa<int>> v{};
+}
 ```
 
 ### API
 
 ```cpp
 namespace mem::v1_1_0 {
-template<class TAllocator>
-concept allocator_like =
+template<class TAllocator> concept allocator_like =
   requires(TAllocator alloc, typename TAllocator::value_type* ptr, std::size_t n) {
     typename TAllocator::value_type;
     { alloc.allocate(n) } -> std::same_as<decltype(ptr)>;
