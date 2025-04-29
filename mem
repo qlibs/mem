@@ -64,7 +64,7 @@ int main() {
     std::vector<int, mem::allocator::huge_pages<int>> v{};
     // echo always > /sys/kernel/mm/transparent_hugepage/hugepages-2048kB/enabled
     std::vector<int, mem::allocator::transparent_huge_pages<int>> v{};
-    // -lnuma (requires libnuma-dev)
+    // -lnuma # requires libnuma-dev
     std::vector<int, mem::allocator::numa<int>> v{};
   }
 }
