@@ -30,25 +30,25 @@
 [![MIT Licence](http://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/license/mit)
 [![Version](https://img.shields.io/github/v/release/qlibs/mem)](https://github.com/qlibs/mem/releases)
 [![Build](https://img.shields.io/badge/build-green.svg)](https://godbolt.org/z/Yh6r9h9Pf)
-[![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)](https://godbolt.org/z/5h85h61P4)
+[![Try it online](https://img.shields.io/badge/try%20it-online-blue.svg)](https://godbolt.org/z/WdaTrqrxK)
 
   > [https://en.wikipedia.org/wiki/Allocator_C++](https://en.wikipedia.org/wiki/Allocator_(C%2B%2B))
 
 ### Features
 
 - Single header (https://raw.githubusercontent.com/qlibs/mem/main/mem) / C++20 module (https://raw.githubusercontent.com/qlibs/mem/main/mem.cppm)
-- Minimal [API](#api)
+- C++23 standard compliant [API](#api) / https://eel.is/c++draft/allocator.requirements
 - Verifies itself upon include (can be disabled with `-DNTEST` - see [FAQ](#faq))
 
 ### Requirements
 
-- C++20 ([clang++12+, g++11+](https://en.cppreference.com/w/cpp/compiler_support)) / [Linux](https://en.wikipedia.org/wiki/Linux)
+- C++20 ([clang++12+, g++11+](https://en.cppreference.com/w/cpp/compiler_support)) / [`Linux`](https://en.wikipedia.org/wiki/Linux)\* / [`libnuma`](https://github.com/numactl/numactl)\*
 
 ### Overview
 
 ```cpp
 static_assert(mem::allocator_like<std::allocator<int>>);
-static_assert(mem::allocator_like<mem::allocator::aligned<int, 64u>>);
+static_assert(mem::allocator_like<mem::allocator::aligned<int, std::align_val_t(64u)>>);
 static_assert(mem::allocator_like<mem::allocator::stack<int, 1024u>>);
 static_assert(mem::allocator_like<mem::allocator::transparent_huge_pages<int>>);
 static_assert(mem::allocator_like<mem::allocator::huge_pages<int>>);
@@ -100,21 +100,22 @@ inline namespace allocator {
     constexpr aligned() noexcept = default;
     constexpr ~aligned() noexcept = default;
 
-    [[nodiscard]] constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T*;
+    [[nodiscard]]
+    constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T*;
 
     #if __cpp_lib_allocate_at_least >= 202302L
-    [[nodiscard]] constexpr std::allocation_result<T*, std::size_t>
-    allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n));
+    [[nodiscard]]
+    constexpr auto allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n));
     #endif
 
     constexpr void deallocate(T* ptr, std::size_t n) noexcept;
   };
 
-  template<class T,
-           std::size_t N,
-           std::align_val_t alignment = alignof(T),
-           auto on_error = [] { return nullptr; }>
-    requires
+  template<
+    class T,
+    std::size_t N,
+    std::align_val_t alignment = alignof(T),
+    auto on_error = [] { return nullptr; }> requires
       (std::has_single_bit(std::size_t(alignment))) and
       (std::size_t(alignment) <= alignof(std::max_align_t)) and
       (not (N % std::size_t(alignment)))
@@ -124,11 +125,12 @@ inline namespace allocator {
     constexpr stack() noexcept = default;
     constexpr ~stack() noexcept = default;
 
-    [[nodiscard]] constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T*;
+    [[nodiscard]]
+    constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T*;
 
     #if __cpp_lib_allocate_at_least >= 202302L
-    [[nodiscard]] constexpr std::allocation_result<T*, std::size_t>
-    allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n));
+    [[nodiscard]]
+    constexpr auto allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n));
     #endif
 
     constexpr void deallocate(T* ptr, std::size_t n) noexcept;
@@ -143,11 +145,12 @@ inline namespace allocator {
     constexpr transparent_huge_pages() noexcept = default;
     constexpr ~transparent_huge_pages() noexcept = default;
 
-    T *allocate(std::size_t n);
+    [[nodiscard]]
+    constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T*;
 
     #if __cpp_lib_allocate_at_least >= 202302L
-    [[nodiscard]] constexpr std::allocation_result<T*, std::size_t>
-    allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n));
+    [[nodiscard]]
+    constexpr auto allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n));
     #endif
 
     constexpr void deallocate(T *ptr, std::size_t n) noexcept;
@@ -159,11 +162,12 @@ inline namespace allocator {
     constexpr huge_pages() noexcept = default;
     constexpr ~huge_pages() noexcept = default;
 
-    [[nodiscard]] constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T*;
+    [[nodiscard]]
+    constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T*;
 
     #if __cpp_lib_allocate_at_least >= 202302L
-    [[nodiscard]] constexpr std::allocation_result<T*, std::size_t>
-    allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n));
+    [[nodiscard]]
+    constexpr auto allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n));
     #endif
 
     constexpr void deallocate(T *ptr, std::size_t n) noexcept;
@@ -176,11 +180,12 @@ inline namespace allocator {
     constexpr explicit numa(auto node = {}) noexcept;
     constexpr ~numa() noexcept = default;
 
-    [[nodiscard]] constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T*;
+    [[nodiscard]]
+    constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T*;
 
     #if __cpp_lib_allocate_at_least >= 202302L
-    [[nodiscard]] constexpr std::allocation_result<T*, std::size_t>
-    allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n));
+    [[nodiscard]]
+    constexpr auto allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n));
     #endif
 
     constexpr void deallocate(T* ptr, std::size_t n) noexcept;
@@ -288,16 +293,18 @@ inline namespace allocator {
     constexpr ~aligned() noexcept = default;
 
     [[nodiscard]] constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T* {
-      return static_cast<T*>(::operator new[](n * sizeof(T), alignment));
+      return reinterpret_cast<T*>(::operator new[](n * sizeof(T), alignment));
     }
 
     #if __cpp_lib_allocate_at_least >= 202302L
-    [[nodiscard]] constexpr std::allocation_result<T*, std::size_t> allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n)) {
-      return {allocate(n), utility::align(n * sizeof(T), alignment) / sizeof(T)};
+    [[nodiscard]] constexpr auto allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n)) {
+      return std::allocation_result<T*, std::size_t>{
+        allocate(n), utility::align(n * sizeof(T), alignment) / sizeof(T)
+      };
     }
     #endif
 
-    constexpr void deallocate(T* ptr, std::size_t n) noexcept {
+    constexpr void deallocate(T* ptr, [[maybe_unused]] std::size_t n) noexcept {
       ::operator delete[](ptr, alignment);
     }
   };
@@ -321,14 +328,17 @@ inline namespace allocator {
       if (std::size_t(data_.data() + N - sp_) < utility::align(n * sizeof(T), alignment)) [[unlikely]] {
         return on_error();
       }
-      auto ptr = std::bit_cast<T*>(sp_);
+      auto ptr = reinterpret_cast<T*>(sp_);
       sp_ += aligned;
       return ptr;
     }
 
     #if __cpp_lib_allocate_at_least >= 202302L
-    [[nodiscard]] constexpr std::allocation_result<T*, std::size_t> allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n)) {
-      return {allocate(n), utility::align(n * sizeof(T), alignment) / sizeof(T)};
+    [[nodiscard]] constexpr auto allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n)) {
+      return std::allocation_result<T*, std::size_t>{
+        allocate(n),
+        utility::align(n * sizeof(T), alignment) / sizeof(T)
+      };
     }
     #endif
 
@@ -378,8 +388,11 @@ inline namespace allocator {
     }
 
     #if __cpp_lib_allocate_at_least >= 202302L
-    [[nodiscard]] constexpr std::allocation_result<T*, std::size_t> allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n)) {
-      return {allocate(n), utility::round(n * sizeof(T), size) / sizeof(T)};
+    [[nodiscard]] constexpr auto allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n)) {
+      return std::allocation_result<T*, std::size_t>{
+        allocate(n),
+        utility::round(n * sizeof(T), size) / sizeof(T)
+      };
     }
     #endif
 
@@ -416,7 +429,7 @@ inline namespace allocator {
       if (n > std::numeric_limits<std::size_t>::max() / sizeof(T)) [[unlikely]] {
         return on_error();
       }
-      auto ptr = std::bit_cast<T*>(mmap(nullptr, utility::round(n * sizeof(T), size), prot, flags, -1, 0));
+      auto ptr = reinterpret_cast<T*>(mmap(nullptr, utility::round(n * sizeof(T), size), prot, flags, -1, 0));
       if (ptr == MAP_FAILED) [[unlikely]] {
         return on_error();
       }
@@ -424,8 +437,11 @@ inline namespace allocator {
     }
 
     #if __cpp_lib_allocate_at_least >= 202302L
-    [[nodiscard]] constexpr std::allocation_result<T*, std::size_t> allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n)) {
-      return {allocate(n), utility::round(n * sizeof(T), size) / sizeof(T)};
+    [[nodiscard]] constexpr auto allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n)) {
+      return std::allocation_result<T*, std::size_t>{
+        allocate(n),
+        utility::round(n * sizeof(T), size) / sizeof(T)
+      };
     }
     #endif
 
@@ -460,12 +476,15 @@ inline namespace allocator {
       if (not ptr) [[unlikely]] {
         return on_error();
       }
-      return std::bit_cast<T*>(ptr);
+      return reinterpret_cast<T*>(ptr);
     }
 
     #if __cpp_lib_allocate_at_least >= 202302L
-    [[nodiscard]] constexpr std::allocation_result<T*, std::size_t> allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n)) {
-      return {allocate(n), n};
+    [[nodiscard]] constexpr auto allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n)) {
+      return std::allocation_result<T*, std::size_t>{
+        allocate(n),
+        n
+      };
     }
     #endif
 
