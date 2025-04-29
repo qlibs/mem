@@ -72,159 +72,45 @@ int main() {
 
 ### API
 
-```cpp
-namespace mem::v1_1_0 {
-template<class TAllocator> concept allocator_like =
-  requires(TAllocator alloc, typename TAllocator::value_type* ptr, std::size_t n) {
-    typename TAllocator::value_type;
-    { alloc.allocate(n) } -> std::same_as<decltype(ptr)>;
-    { alloc.deallocate(ptr, n) } -> std::same_as<void>;
-    #if __cpp_lib_allocate_at_least >= 202302L
-    { allocate_at_least(n) } -> std::same_as<std::allocation_result<T*, std::size_t>>;
-    #endif
-  };
-
-inline namespace allocator {
-  template<class T,
-    std::align_val_t alignment = 64u,
-    auto on_error = [] { return nullptr; }
-  > requires (std::has_single_bit(std::size_t(alignment)))
-  struct aligned {
-    using value_type = T;
-
-    constexpr aligned() noexcept = default;
-    constexpr ~aligned() noexcept = default;
-
-    [[nodiscard]]
-    constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T*;
-
-    #if __cpp_lib_allocate_at_least >= 202302L
-    [[nodiscard]]
-    constexpr auto allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n));
-    #endif
-
-    constexpr void deallocate(T* ptr, std::size_t n) noexcept;
-  };
-
-  template<
-    class T,
-    std::size_t N,
-    std::align_val_t alignment = alignof(T),
-    auto on_error = [] { return nullptr; }> requires
-      (std::has_single_bit(std::size_t(alignment))) and
-      (std::size_t(alignment) <= alignof(std::max_align_t)) and
-      (not (N % std::size_t(alignment)))
-  struct stack {
-    using value_type = T;
-
-    constexpr stack() noexcept = default;
-    constexpr ~stack() noexcept = default;
-
-    [[nodiscard]]
-    constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T*;
-
-    #if __cpp_lib_allocate_at_least >= 202302L
-    [[nodiscard]]
-    constexpr auto allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n));
-    #endif
-
-    constexpr void deallocate(T* ptr, std::size_t n) noexcept;
-  };
-
-  template<class T,
-    std::size_t N = (1u << 21u),
-    auto on_error = [] { return nullptr; }>
-  struct transparent_huge_pages {
-    using value_type = T;
-
-    constexpr transparent_huge_pages() noexcept = default;
-    constexpr ~transparent_huge_pages() noexcept = default;
-
-    [[nodiscard]]
-    constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T*;
-
-    #if __cpp_lib_allocate_at_least >= 202302L
-    [[nodiscard]]
-    constexpr auto allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n));
-    #endif
-
-    constexpr void deallocate(T *ptr, std::size_t n) noexcept;
-  };
-
-  struct huge_pages {
-    using value_type = T;
-
-    constexpr huge_pages() noexcept = default;
-    constexpr ~huge_pages() noexcept = default;
-
-    [[nodiscard]]
-    constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T*;
-
-    #if __cpp_lib_allocate_at_least >= 202302L
-    [[nodiscard]]
-    constexpr auto allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n));
-    #endif
-
-    constexpr void deallocate(T *ptr, std::size_t n) noexcept;
-  };
-
-  template<class T, auto on_error = [] { return nullptr; }>
-  struct numa {
-    using value_type = T;
-
-    constexpr explicit numa(auto node = {}) noexcept;
-    constexpr ~numa() noexcept = default;
-
-    [[nodiscard]]
-    constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T*;
-
-    #if __cpp_lib_allocate_at_least >= 202302L
-    [[nodiscard]]
-    constexpr auto allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n));
-    #endif
-
-    constexpr void deallocate(T* ptr, std::size_t n) noexcept;
-  };
-} // namespace allocator
-} // namespace mem
-```
+> https://github.com/qlibs/mem/blob/main/mem.cppm
 
 ### FAQ
 
-> - How to disable running tests at compile-time?
+> How to disable running tests at compile-time?
 >
 >   When `-DNTEST` is defined static_asserts tests wont be executed upon inclusion.
 >   Note: Use with caution as disabling tests means that there are no gurantees upon inclusion that given compiler/env combination works as expected.
 >
-> - Similar projects?
+> Similar projects?
+>
 >   [std::pmr](https://en.cppreference.com/w/cpp/header/memory)
 
 ### Resources
 
-> `std::allocator`
-> - https://eel.is/c++draft/allocator.requirements
-> - https://en.cppreference.com/w/cpp/memory/allocator
+> `std::allocator` <br />
+> https://eel.is/c++draft/allocator.requirements <br />
+> https://en.cppreference.com/w/cpp/memory/allocator <br />
 
-> Transparent Huge Pages
-> - https://www.kernel.org/doc/html/latest/admin-guide/mm/transhuge.html
-> - https://man7.org/linux/man-pages/man2/madvise.2.html
-> - https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/6/html/performance_tuning_guide/s-memory-transhuge
+> **Transparent Huge Pages** <br />
+> https://www.kernel.org/doc/html/latest/admin-guide/mm/transhuge.html <br />
+> https://man7.org/linux/man-pages/man2/madvise.2.html <br />
+> https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/6/html/performance_tuning_guide/s-memory-transhuge <br />
 
-> Huge Pages
-> - https://www.kernel.org/doc/html/latest/admin-guide/mm/hugetlbpage.html
-> - https://www.man7.org/linux/man-pages/man2/mmap.2.html
-> - https://www.intel.com/content/www/us/en/docs/programmable/683840/1-2-1/enabling-hugepages.html
-> - https://github.com/libhugetlbfs/libhugetlbfs
-> - https://wiki.debian.org/Hugepages
+> `Huge Pages` <br />
+> https://www.kernel.org/doc/html/latest/admin-guide/mm/hugetlbpage.html <br />
+> https://www.man7.org/linux/man-pages/man2/mmap.2.html <br />
+> https://www.intel.com/content/www/us/en/docs/programmable/683840/1-2-1/enabling-hugepages.html <br />
+> https://github.com/libhugetlbfs/libhugetlbfs <br />
+> https://wiki.debian.org/Hugepages <br />
 
-> Non Uniform Memory Access
-> - https://en.wikipedia.org/wiki/Non-uniform_memory_access
-> - https://man7.org/linux/man-pages/man3/numa.3.html
-> - https://www.intel.com/content/www/us/en/developer/articles/technical/use-intel-quickassist-technology-efficiently-with-numa-awareness.html
+> `Non Uniform Memory Access` <br />
+> https://en.wikipedia.org/wiki/Non-uniform_memory_access <br />
+> https://man7.org/linux/man-pages/man3/numa.3.html <br />
+> https://www.intel.com/content/www/us/en/developer/articles/technical/use-intel-quickassist-technology-efficiently-with-numa-awareness.html <br />
 
 ### License
 
-> - [MIT](LICENSE)
+> [MIT](LICENSE)
 
 <!--
 #endif
