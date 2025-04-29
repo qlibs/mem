@@ -42,7 +42,7 @@
 
 ### Requirements
 
-- C++20+ ([clang++12+, g++11+](https://en.cppreference.com/w/cpp/compiler_support)) / [`Linux`](https://en.wikipedia.org/wiki/Linux)\* / [`libnuma`](https://github.com/numactl/numactl)\*
+- C++20+ ([clang++12+, g++11+](https://en.cppreference.com/w/cpp/compiler_support)) / [`Linux`](https://en.wikipedia.org/wiki/Linux)\* / [`numactl`](https://github.com/numactl/numactl)\*
 
 ### Overview
 
@@ -76,11 +76,11 @@ int main() {
 
 ### FAQ
 
-> **How to disable running tests at compile-time?** <br />
+> `How to disable running tests at compile-time?` <br />
 > When `-DNTEST` is defined static_asserts tests wont be executed upon inclusion.
 > Note: Use with caution as disabling tests means that there are no gurantees upon inclusion that given compiler/env combination works as expected.
 >
-> **Similar projects?** <br />
+> `Similar projects?` <br />
 > [std::pmr](https://en.cppreference.com/w/cpp/header/memory)
 
 ### Resources
