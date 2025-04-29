@@ -339,7 +339,7 @@ inline namespace allocator {
 
     constexpr void deallocate(T* ptr, std::size_t n) noexcept {
       const auto aligned = utility::align(n * sizeof(T), alignment);
-      auto p = static_cast<std::byte*>(ptr);
+      auto p = reinterpret_cast<std::byte*>(ptr);
       if (p + aligned != sp_) [[unlikely]] {
         return;
       }
