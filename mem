@@ -1,7 +1,7 @@
 // <!--
 // The MIT License (MIT)
 //
-// Copyright (c) 2024 Kris Jusiak <kris@jusiak.net>
+// Copyright (c) 2024-2025 Kris Jusiak <kris@jusiak.net>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -47,118 +47,146 @@
 ### Overview
 
 ```cpp
-static_assert(mem::allocator<std::allocator<int>>);
-static_assert(mem::allocator<mem::stack<int, 1024u>>);
-static_assert(mem::allocator<mem::huge_pages<int>>);
-static_assert(mem::allocator<mem::transparent_huge_pages<int>>);
-static_assert(mem::allocator<mem::numa<int>>);
+static_assert(mem::allocator_like<std::allocator<int>>);
+static_assert(mem::allocator_like<mem::allocator::aligned<int, 64u>>);
+static_assert(mem::allocator_like<mem::allocator::stack<int, 1024u>>);
+static_assert(mem::allocator_like<mem::allocator::transparent_huge_pages<int>>);
+static_assert(mem::allocator_like<mem::allocator::huge_pages<int>>);
+static_assert(mem::allocator_like<mem::allocator::numa<int>>);
 ```
 
 ```cpp
-std::vector<int, mem::stack<int, 1024u>> v{};
+std::vector<int, mem::allocator::stack<int, 1024u>> v{};
 ```
 
 ```cpp
 // echo 20 > /proc/sys/vm/nr_hugepages
-std::vector<int, mem::huge_pages<int>> v{};
+std::vector<int, mem::allocator::huge_pages<int>> v{};
 ```
 
 ```cpp
 // echo always > /sys/kernel/mm/transparent_hugepage/hugepages-2048kB/enabled
-std::vector<int, mem::transparent_huge_pages<int>> v{};
+std::vector<int, mem::allocator::transparent_huge_pages<int>> v{};
 ```
 
 ```cpp
 // -lnuma (requires libnuma-dev)
-std::vector<int, mem::numa<int>> v{};
+std::vector<int, mem::allocator::numa<int>> v{};
 ```
 
 ### API
 
 ```cpp
+namespace mem::v1_1_0 {
 template<class TAllocator>
-concept allocator = requires(TAllocator alloc,
-                             typename TAllocator::value_type* ptr,
-                             std::size_t n) {
-  typename TAllocator::value_type;
-  { alloc.allocate(n) } -> std::same_as<decltype(ptr)>;
-  { alloc.deallocate(ptr, n) } -> std::same_as<void>;
-  #if __cpp_lib_allocate_at_least >= 202302L
-  { allocate_at_least(n) } -> std::same_as<std::allocation_result<T*, std::size_t>>;
-  #endif
-};
+concept allocator_like =
+  requires(TAllocator alloc, typename TAllocator::value_type* ptr, std::size_t n) {
+    typename TAllocator::value_type;
+    { alloc.allocate(n) } -> std::same_as<decltype(ptr)>;
+    { alloc.deallocate(ptr, n) } -> std::same_as<void>;
+    #if __cpp_lib_allocate_at_least >= 202302L
+    { allocate_at_least(n) } -> std::same_as<std::allocation_result<T*, std::size_t>>;
+    #endif
+  };
 
-template<class T,
-         std::size_t N,
-         std::size_t alignment = alignof(T),
-         auto on_error = [] { return nullptr; }>
-  requires (alignment <= alignof(std::max_align_t)) and (not (N % alignment))
-struct stack {
-  using value_type = T;
+inline namespace allocator {
+  template<class T,
+    std::align_val_t alignment = 64u,
+    auto on_error = [] { return nullptr; }
+  > requires (std::has_single_bit(std::size_t(alignment)))
+  struct aligned {
+    using value_type = T;
 
-  constexpr stack() noexcept = default;
+    constexpr aligned() noexcept = default;
+    constexpr ~aligned() noexcept = default;
 
-  [[nodiscard]] constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T*;
+    [[nodiscard]] constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T*;
 
-  #if __cpp_lib_allocate_at_least >= 202302L
-  constexpr std::allocation_result<T*, std::size_t>
-  allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n));
-  #endif
+    #if __cpp_lib_allocate_at_least >= 202302L
+    [[nodiscard]] constexpr std::allocation_result<T*, std::size_t>
+    allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n));
+    #endif
 
-  constexpr void deallocate(T* ptr, std::size_t n) noexcept;
-};
+    constexpr void deallocate(T* ptr, std::size_t n) noexcept;
+  };
 
-template <class T,
-          std::size_t N = (1u << 21u),
-          auto on_error = [] { return nullptr; }>
-struct huge_pages {
-  using value_type = T;
+  template<class T,
+           std::size_t N,
+           std::align_val_t alignment = alignof(T),
+           auto on_error = [] { return nullptr; }>
+    requires
+      (std::has_single_bit(std::size_t(alignment))) and
+      (std::size_t(alignment) <= alignof(std::max_align_t)) and
+      (not (N % std::size_t(alignment)))
+  struct stack {
+    using value_type = T;
 
-  constexpr huge_pages() noexcept = default;
+    constexpr stack() noexcept = default;
+    constexpr ~stack() noexcept = default;
 
-  [[nodiscard]] constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T*;
+    [[nodiscard]] constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T*;
 
-  #if __cpp_lib_allocate_at_least >= 202302L
-  constexpr std::allocation_result<T*, std::size_t>
-  allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n));
-  #endif
+    #if __cpp_lib_allocate_at_least >= 202302L
+    [[nodiscard]] constexpr std::allocation_result<T*, std::size_t>
+    allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n));
+    #endif
 
-  constexpr void deallocate(T *ptr, std::size_t n) noexcept;
-};
+    constexpr void deallocate(T* ptr, std::size_t n) noexcept;
+  };
 
-template <class T,
-          std::size_t N = (1u << 21u),
-          auto on_error = [] { return nullptr; }>
-struct transparent_huge_pages {
-  using value_type = T;
+  template<class T,
+    std::size_t N = (1u << 21u),
+    auto on_error = [] { return nullptr; }>
+  struct transparent_huge_pages {
+    using value_type = T;
 
-  constexpr transparent_huge_pages() noexcept = default;
+    constexpr transparent_huge_pages() noexcept = default;
+    constexpr ~transparent_huge_pages() noexcept = default;
 
-  T *allocate(std::size_t n);
+    T *allocate(std::size_t n);
 
-  #if __cpp_lib_allocate_at_least >= 202302L
-  constexpr std::allocation_result<T*, std::size_t>
-  allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n));
-  #endif
+    #if __cpp_lib_allocate_at_least >= 202302L
+    [[nodiscard]] constexpr std::allocation_result<T*, std::size_t>
+    allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n));
+    #endif
 
-  constexpr void deallocate(T *ptr, std::size_t n) noexcept;
-};
+    constexpr void deallocate(T *ptr, std::size_t n) noexcept;
+  };
 
-template<class T, auto on_error = [] { return nullptr; }>
-struct numa {
-  using value_type = T;
+  struct huge_pages {
+    using value_type = T;
 
-  constexpr numa(node_type node = {}) noexcept;
+    constexpr huge_pages() noexcept = default;
+    constexpr ~huge_pages() noexcept = default;
 
-  [[nodiscard]] constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T*;
+    [[nodiscard]] constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T*;
 
-  #if __cpp_lib_allocate_at_least >= 202302L
-  constexpr std::allocation_result<T*, std::size_t>
-  allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n));
-  #endif
+    #if __cpp_lib_allocate_at_least >= 202302L
+    [[nodiscard]] constexpr std::allocation_result<T*, std::size_t>
+    allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n));
+    #endif
 
-  constexpr void deallocate(T* ptr, std::size_t n) noexcept;
-};
+    constexpr void deallocate(T *ptr, std::size_t n) noexcept;
+  };
+
+  template<class T, auto on_error = [] { return nullptr; }>
+  struct numa {
+    using value_type = T;
+
+    constexpr explicit numa(auto node = {}) noexcept;
+    constexpr ~numa() noexcept = default;
+
+    [[nodiscard]] constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T*;
+
+    #if __cpp_lib_allocate_at_least >= 202302L
+    [[nodiscard]] constexpr std::allocation_result<T*, std::size_t>
+    allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n));
+    #endif
+
+    constexpr void deallocate(T* ptr, std::size_t n) noexcept;
+  };
+} // namespace allocator
+} // namespace mem
 ```
 
 ### FAQ
@@ -203,19 +231,31 @@ struct numa {
 
 #pragma once
 
-#include <memory>
-#include <cassert>
-#include <array>
-#include <bitset>
-#include <bit>
-#include <concepts>
-#include <numeric>
 #include <cstdint>
 #include <cstddef>
+#include <cassert>
 
-namespace mem::inline v1_0_3 {
+#include <bitset>
+#include <bit>
+#include <numeric>
+#include <memory>
+#include <array>
+
+#if __has_include(<sys/mman.h>)
+#include <sys/mman.h>
+#endif
+
+#if  __has_include(<cstdlib>)
+#include <cstdlib>
+#endif
+
+#if __has_include(<numa.h>)
+#include <numa.h>
+#endif
+
+namespace mem::inline v1_1_0 {
 template<class TAllocator>
-concept allocator = requires(TAllocator alloc, typename TAllocator::value_type* ptr, std::size_t n) {
+concept allocator_like = requires(TAllocator alloc, typename TAllocator::value_type* ptr, std::size_t n) {
   typename TAllocator::value_type;
   { alloc.allocate(n) } -> std::same_as<decltype(ptr)>;
   { alloc.deallocate(ptr, n) } -> std::same_as<void>;
@@ -223,254 +263,314 @@ concept allocator = requires(TAllocator alloc, typename TAllocator::value_type* 
   { allocate_at_least(n) } -> std::same_as<std::allocation_result<T*, std::size_t>>;
   #endif
 };
-} // mem
 
-namespace mem::inline v1_0_3 {
-template<class T, std::size_t N, std::size_t alignment = alignof(T), auto on_error = [] { return nullptr; }>
-  requires (alignment <= alignof(std::max_align_t)) and (not (N % alignment))
-struct stack {
-  using value_type = T;
-  using stack_type = std::byte;
-  template<class U> struct rebind {
-    using other = stack<U, N, alignment, on_error>;
-  };
-  static constexpr auto align = [](std::size_t n) { return (n + (alignment - 1u)) & ~(alignment - 1u); };
+inline namespace allocator {
+  namespace utility {
+    inline constexpr auto align = [](const std::size_t n, const std::align_val_t alignment) {
+      return (n + (std::size_t(alignment) - 1u)) & ~(std::size_t(alignment) - 1u);
+    };
 
-  constexpr stack() noexcept = default;
+    inline constexpr auto round = [](const std::size_t n, const std::size_t size) {
+      assert(n > 1u and size > 0u);
+      return (((n - 1u) / size) + 1u) * size;
+    };
+  } // namespace utility
 
-  [[nodiscard]] constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T* {
-    const auto aligned = align(n * sizeof(T));
-    if (std::size_t(data.data() + N - sp) < align(n * sizeof(T))) [[unlikely]] {
-      return on_error();
+  template<class T, std::align_val_t alignment = std::align_val_t(64u), auto on_error = [] { return nullptr; }>
+    requires (std::has_single_bit(std::size_t(alignment)))
+  struct aligned {
+    using value_type = T;
+    template<class U> struct rebind {
+      using other = aligned<T, alignment, on_error>;
+    };
+
+    constexpr aligned() noexcept = default;
+    constexpr ~aligned() noexcept = default;
+
+    [[nodiscard]] constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T* {
+      return static_cast<T*>(::operator new[](n * sizeof(T), alignment));
     }
-    auto ptr = std::bit_cast<T*>(sp);
-    sp += aligned;
-    return ptr;
-  }
 
-  #if __cpp_lib_allocate_at_least >= 202302L
-  constexpr std::allocation_result<T*, std::size_t> allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n)) {
-    return { allocate(n), align(n * sizeof(T)) / sizeof(T) };
-  }
-  #endif
-
-  constexpr void deallocate(T* ptr, std::size_t n) noexcept {
-    const auto aligned = align(n * sizeof(T));
-    auto p = std::bit_cast<stack_type*>(ptr);
-    if (p + aligned != sp) [[unlikely]] {
-      return;
+    #if __cpp_lib_allocate_at_least >= 202302L
+    [[nodiscard]] constexpr std::allocation_result<T*, std::size_t> allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n)) {
+      return {allocate(n), utility::align(n * sizeof(T), alignment) / sizeof(T)};
     }
-    sp = p;
-  }
+    #endif
 
-  alignas(alignment) std::array<stack_type, N> data{};
-  stack_type* sp{data.data()};
-};
-} // namespace mem
-
-#if __has_include(<sys/mman.h>)
-#include <sys/mman.h>
-namespace mem::inline v1_0_3 {
-/**
- * `echo 20 > /proc/sys/vm/nr_hugepages`
- * https://www.kernel.org/doc/html/latest/admin-guide/mm/hugetlbpage.html
- * https://www.man7.org/linux/man-pages/man2/mmap.2.html
- * https://www.intel.com/content/www/us/en/docs/programmable/683840/1-2-1/enabling-hugepages.html
- * https://github.com/libhugetlbfs/libhugetlbfs
- * https://wiki.debian.org/Hugepages
- */
-template <class T, std::size_t N = (1u << 21u), auto on_error = [] { return nullptr; }>
-struct huge_pages {
-  using value_type = T;
-  template<class U> struct rebind {
-    using other = huge_pages<U, N, on_error>;
+    constexpr void deallocate(T* ptr, std::size_t n) noexcept {
+      ::operator delete[](ptr, alignment);
+    }
   };
 
-  static constexpr auto size = N;
-  static constexpr auto prot = PROT_READ | PROT_WRITE;
-  static constexpr auto flags = MAP_PRIVATE | MAP_ANONYMOUS | MAP_POPULATE | MAP_HUGETLB;
-  static constexpr auto round = [](std::size_t n) { return (((n - 1u) / N) + 1u) * N; };
+  template<class T, std::size_t N, std::align_val_t alignment = std::align_val_t(alignof(T)), auto on_error = [] { return nullptr; }>
+    requires
+      (std::has_single_bit(std::size_t(alignment))) and
+      (std::size_t(alignment) <= alignof(std::max_align_t)) and
+      (not (N % std::size_t(alignment)))
+  struct stack {
+    using value_type = T;
+    template<class U> struct rebind {
+      using other = stack<U, N, alignment, on_error>;
+    };
 
-  constexpr huge_pages() noexcept = default;
+    constexpr stack() noexcept = default;
+    constexpr ~stack() noexcept = default;
 
-  [[nodiscard]] constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T* {
-    if (n > std::numeric_limits<std::size_t>::max() / sizeof(T)) [[unlikely]] {
-      return on_error();
+    [[nodiscard]] constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T* {
+      const auto aligned = utility::align(n * sizeof(T), alignment);
+      if (std::size_t(data_.data() + N - sp_) < utility::align(n * sizeof(T), alignment)) [[unlikely]] {
+        return on_error();
+      }
+      auto ptr = std::bit_cast<T*>(sp_);
+      sp_ += aligned;
+      return ptr;
     }
-    auto ptr = std::bit_cast<T*>(mmap(nullptr, round(n * sizeof(T)), prot, flags, -1, 0));
-    if (ptr == MAP_FAILED) [[unlikely]] {
-      return on_error();
+
+    #if __cpp_lib_allocate_at_least >= 202302L
+    [[nodiscard]] constexpr std::allocation_result<T*, std::size_t> allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n)) {
+      return {allocate(n), utility::align(n * sizeof(T), alignment) / sizeof(T)};
     }
-    return ptr;
-  }
+    #endif
 
-  #if __cpp_lib_allocate_at_least >= 202302L
-  constexpr std::allocation_result<T*, std::size_t> allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n)) {
-    return { allocate(n), round(n * sizeof(T)) / sizeof(T) };
-  }
-  #endif
+    constexpr void deallocate(T* ptr, std::size_t n) noexcept {
+      const auto aligned = utility::align(n * sizeof(T), alignment);
+      auto p = static_cast<std::byte*>(ptr);
+      if (p + aligned != sp_) [[unlikely]] {
+        return;
+      }
+      sp_ = p;
+    }
 
-  constexpr void deallocate(T *ptr, std::size_t n) noexcept {
-    munmap(ptr, round(n));
-  }
-};
-} // namespace mem
-#endif
-
-#if __has_include(<sys/mman.h>) and __has_include(<cstdlib>)
-#include <sys/mman.h>
-#include <cstdlib>
-namespace mem::inline v1_0_3 {
-/**
- * `echo always > /sys/kernel/mm/transparent_hugepage/hugepages-2048kB/enabled`
- * https://www.kernel.org/doc/html/latest/admin-guide/mm/transhuge.html
- * https://man7.org/linux/man-pages/man2/madvise.2.html
- * https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/6/html/performance_tuning_guide/s-memory-transhuge
- */
-template <class T, std::size_t N = (1u << 21u), auto on_error = [] { return nullptr; }>
-struct transparent_huge_pages {
-  using value_type = T;
-  template<class U> struct rebind {
-    using other = transparent_huge_pages<U, N, on_error>;
+   private:
+    alignas(std::size_t(alignment)) std::array<std::byte, N> data_{};
+    std::byte* sp_{data_.data()};
   };
 
-  static constexpr auto size = N;
-  static constexpr auto prot = PROT_READ | PROT_WRITE;
-  static constexpr auto flags = MAP_PRIVATE | MAP_ANONYMOUS | MAP_POPULATE | MAP_HUGETLB;
-  static constexpr auto round = [](std::size_t n) { return (((n - 1u) / N) + 1u) * N; };
-
-  constexpr transparent_huge_pages() noexcept = default;
-
-  [[nodiscard]] constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T* {
-    if (n > std::numeric_limits<std::size_t>::max() / sizeof(T)) [[unlikely]] {
-      return on_error();
-    }
-    void *ptr{};
-    posix_memalign(&ptr, N, n * sizeof(T));
-    madvise(ptr, n * sizeof(T), MADV_HUGEPAGE);
-    if (not ptr) [[unlikely]] {
-      return on_error();
-    }
-    return static_cast<T*>(ptr);
-  }
-
-  #if __cpp_lib_allocate_at_least >= 202302L
-  constexpr std::allocation_result<T*, std::size_t> allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n)) {
-    return { allocate(n), round(n * sizeof(T)) / sizeof(T) };
-  }
-  #endif
-
-  constexpr void deallocate(T *ptr, [[maybe_unused]] std::size_t n) noexcept {
-    std::free(ptr);
-  }
-};
-} // namespace mem
-#endif
-
-#if __has_include(<numa.h>)
-#include <numa.h>
-namespace mem::inline v1_0_3 {
-/**
- * `-lnuma`
- * https://en.wikipedia.org/wiki/Non-uniform_memory_access
- * https://man7.org/linux/man-pages/man3/numa.3.html
- * https://www.intel.com/content/www/us/en/developer/articles/technical/use-intel-quickassist-technology-efficiently-with-numa-awareness.html
- */
-template<class T, auto on_error = [] { return nullptr; }>
-struct numa {
-  using value_type = T;
-  using node_type = int;
-  template<class U> struct rebind {
-    using other = numa<U, on_error>;
-  };
-
-  constexpr numa(node_type node = {}) noexcept : node{node} { }
-
+  #if __has_include(<sys/mman.h>) and __has_include(<cstdlib>)
   /**
-   * The size argument (n) will be rounded up to a multiple of the system page size.
+   * `echo always > /sys/kernel/mm/transparent_hugepage/hugepages-2048kB/enabled`
+   * https://www.kernel.org/doc/html/latest/admin-guide/mm/transhuge.html
+   * https://man7.org/linux/man-pages/man2/madvise.2.html
+   * https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/6/html/performance_tuning_guide/s-memory-transhuge
    */
-  [[nodiscard]] constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T* {
-    auto ptr = numa_alloc_onnode(n * sizeof(T), node);
-    if (not ptr) [[unlikely]] {
-      return on_error();
-    }
-    return std::bit_cast<T*>(ptr);
-  }
+  template<class T, std::size_t N = (1u << 21u), auto on_error = [] { return nullptr; }>
+  struct transparent_huge_pages {
+    using value_type = T;
+    template<class U> struct rebind {
+      using other = transparent_huge_pages<U, N, on_error>;
+    };
+    static constexpr auto size = N;
 
-  #if __cpp_lib_allocate_at_least >= 202302L
-  constexpr std::allocation_result<T*, std::size_t> allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n)) {
-    return { allocate(n), n };
-  }
+    constexpr transparent_huge_pages() noexcept = default;
+    constexpr ~transparent_huge_pages() noexcept = default;
+
+    [[nodiscard]] constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T* {
+      if (n > std::numeric_limits<std::size_t>::max() / sizeof(T)) [[unlikely]] {
+        return on_error();
+      }
+      void *ptr{};
+      posix_memalign(&ptr, N, n * sizeof(T));
+      madvise(ptr, n * sizeof(T), MADV_HUGEPAGE);
+      if (not ptr) [[unlikely]] {
+        return on_error();
+      }
+      return static_cast<T*>(ptr);
+    }
+
+    #if __cpp_lib_allocate_at_least >= 202302L
+    [[nodiscard]] constexpr std::allocation_result<T*, std::size_t> allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n)) {
+      return {allocate(n), utility::round(n * sizeof(T), size) / sizeof(T)};
+    }
+    #endif
+
+    constexpr void deallocate(T *ptr, [[maybe_unused]] std::size_t n) noexcept {
+      std::free(ptr);
+    }
+  };
   #endif
 
+  #if __has_include(<sys/mman.h>)
   /**
-   * The size argument (n) will be rounded up to a multiple of the system page size.
+   * `echo 20 > /proc/sys/vm/nr_hugepages`
+   * https://www.kernel.org/doc/html/latest/admin-guide/mm/hugetlbpage.html
+   * https://www.man7.org/linux/man-pages/man2/mmap.2.html
+   * https://www.intel.com/content/www/us/en/docs/programmable/683840/1-2-1/enabling-hugepages.html
+   * https://github.com/libhugetlbfs/libhugetlbfs
+   * https://wiki.debian.org/Hugepages
    */
-  constexpr void deallocate(T* ptr, std::size_t n) noexcept {
-    numa_free(ptr, n * sizeof(T));
-  }
+  template <class T, std::size_t N = (1u << 21u), auto on_error = [] { return nullptr; }>
+  struct huge_pages {
+    using value_type = T;
+    template<class U> struct rebind {
+      using other = huge_pages<U, N, on_error>;
+    };
+    static constexpr auto size = N;
 
-  node_type node{};
-};
+    constexpr huge_pages() noexcept = default;
+    constexpr ~huge_pages() noexcept = default;
+
+    [[nodiscard]] constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T* {
+      constexpr auto prot = PROT_READ | PROT_WRITE;
+      constexpr auto flags = MAP_PRIVATE | MAP_ANONYMOUS | MAP_POPULATE | MAP_HUGETLB;
+
+      if (n > std::numeric_limits<std::size_t>::max() / sizeof(T)) [[unlikely]] {
+        return on_error();
+      }
+      auto ptr = std::bit_cast<T*>(mmap(nullptr, utility::round(n * sizeof(T), size), prot, flags, -1, 0));
+      if (ptr == MAP_FAILED) [[unlikely]] {
+        return on_error();
+      }
+      return ptr;
+    }
+
+    #if __cpp_lib_allocate_at_least >= 202302L
+    [[nodiscard]] constexpr std::allocation_result<T*, std::size_t> allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n)) {
+      return {allocate(n), utility::round(n * sizeof(T), size) / sizeof(T)};
+    }
+    #endif
+
+    constexpr void deallocate(T *ptr, std::size_t n) noexcept {
+      munmap(ptr, utility::round(n, size));
+    }
+  };
+  #endif
+
+  #if __has_include(<numa.h>)
+  /**
+   * `-lnuma`
+   * https://en.wikipedia.org/wiki/Non-uniform_memory_access
+   * https://man7.org/linux/man-pages/man3/numa.3.html
+   * https://www.intel.com/content/www/us/en/developer/articles/technical/use-intel-quickassist-technology-efficiently-with-numa-awareness.html
+   */
+  template<class T, auto on_error = [] { return nullptr; }>
+  struct numa {
+    using value_type = T;
+    template<class U> struct rebind {
+      using other = numa<U, on_error>;
+    };
+
+    constexpr explicit numa(int node = {}) noexcept : node_{node} { }
+    constexpr ~numa() noexcept = default;
+
+    /**
+     * The size argument (n) will be rounded up to a multiple of the system page size.
+     */
+    [[nodiscard]] constexpr auto allocate(std::size_t n) noexcept(noexcept(on_error())) -> T* {
+      auto ptr = numa_alloc_onnode(n * sizeof(T), node_);
+      if (not ptr) [[unlikely]] {
+        return on_error();
+      }
+      return std::bit_cast<T*>(ptr);
+    }
+
+    #if __cpp_lib_allocate_at_least >= 202302L
+    [[nodiscard]] constexpr std::allocation_result<T*, std::size_t> allocate_at_least(std::size_t n) noexcept(noexcept(allocate(n)) {
+      return {allocate(n), n};
+    }
+    #endif
+
+    /**
+     * The size argument (n) will be rounded up to a multiple of the system page size.
+     */
+    constexpr void deallocate(T* ptr, std::size_t n) noexcept {
+      numa_free(ptr, n * sizeof(T));
+    }
+
+   private:
+    int node_{};
+  };
+  #endif
+} // namespace allocator
 } // namespace mem
-#endif
 
 #ifndef NTEST
 static_assert(([] {
-  // mem::allocator
+  struct empty { };
+
+  // mem::utility::align
   {
-    static_assert(not mem::allocator<void>);
-    static_assert(not mem::allocator<int>);
-    static_assert(mem::allocator<std::allocator<int>>);
-    static_assert(mem::allocator<mem::stack<int, 1024u>>);
+    static_assert(mem::utility::align(0u, std::align_val_t{8u}) == 0u);
+    static_assert(mem::utility::align(1u, std::align_val_t{8u}) == 8u);
+    static_assert(mem::utility::align(8u, std::align_val_t{8u}) == 8u);
+    static_assert(mem::utility::align(9u, std::align_val_t{8u}) == 16u);
+    static_assert(mem::utility::align(15u, std::align_val_t{8u}) == 16u);
+    static_assert(mem::utility::align(16u, std::align_val_t{8u}) == 16u);
+    static_assert(mem::utility::align(17u, std::align_val_t{8u}) == 24u);
+    static_assert(mem::utility::align(5u, std::align_val_t{1u}) == 5u);
+    static_assert(mem::utility::align(123u, std::align_val_t{64u}) == 128u);
+    static_assert(mem::utility::align(256u, std::align_val_t{256u}) == 256u);
+    static_assert(mem::utility::align(511u, std::align_val_t{256u}) == 512u);
+  }
+
+  // mem::utility::round
+  {
+    static_assert(mem::utility::round(2u, 2u) == 2u);
+    static_assert(mem::utility::round(3u, 2u) == 4u);
+    static_assert(mem::utility::round(5u, 4u) == 8u);
+    static_assert(mem::utility::round(8u, 4u) == 8u);
+    static_assert(mem::utility::round(9u, 4u) == 12u);
+    static_assert(mem::utility::round(15u, 16u) == 16u);
+    static_assert(mem::utility::round(16u, 16u) == 16u);
+    static_assert(mem::utility::round(17u, 16u) == 32u);
+  }
+
+  // mem::allocator_like
+  {
+    static_assert(not mem::allocator_like<void>);
+    static_assert(not mem::allocator_like<int>);
+    static_assert(mem::allocator_like<std::allocator<int>>);
+    static_assert(mem::allocator_like<mem::stack<int, 1024u>>);
     #if __has_include(<sys/mman.h>)
-    static_assert(mem::allocator<mem::huge_pages<int>>);
+    static_assert(mem::allocator_like<mem::huge_pages<int>>);
     #endif
     #if __has_include(<numa.h>)
-    static_assert(mem::allocator<mem::numa<int>>);
+    static_assert(mem::allocator_like<mem::numa<int>>);
     #endif
   }
 
-  // mem::stack
+  // mem::allocator::aligned
   {
-    static_assert(not []<class T, auto... Vs> { return requires { mem::stack<T, Vs...>{}; }; }.template operator()<int, 1u>());
-    static_assert(not []<class T, auto... Vs> { return requires { mem::stack<T, Vs...>{}; }; }.template operator()<int, 2u>());
-    static_assert(not []<class T, auto... Vs> { return requires { mem::stack<T, Vs...>{}; }; }.template operator()<int, sizeof(int), 1u + alignof(std::max_align_t)>());
-    static_assert([]<class T, auto... Vs> { return requires { mem::stack<T, Vs...>{}; }; }.template operator()<int, sizeof(int) * 8u>());
-    static_assert([]<class T, auto... Vs> { return requires { mem::stack<T, Vs...>{}; }; }.template  operator()<int, alignof(int)>());
-    static_assert(sizeof(mem::stack<int, 16u>) >= sizeof(std::array<std::byte, 16u>));
+    static_assert([]<class T, auto... Vs> { return requires { mem::allocator::aligned<T, Vs...>{}; }; }.template operator()<int>());
+    static_assert([]<class T, auto... Vs> { return requires { mem::allocator::aligned<T, Vs...>{}; }; }.template operator()<int, std::align_val_t(64u)>());
+  }
+
+  // mem::allocator::stack
+  {
+    static_assert(not []<class T, auto... Vs> { return requires { mem::allocator::stack<T, Vs...>{}; }; }.template operator()<int, 1u>());
+    static_assert(not []<class T, auto... Vs> { return requires { mem::allocator::stack<T, Vs...>{}; }; }.template operator()<int, 2u>());
+    static_assert(not []<class T, auto... Vs> { return requires { mem::allocator::stack<T, Vs...>{}; }; }.template operator()<int, sizeof(int), 1u + alignof(std::max_align_t)>());
+    static_assert([]<class T, auto... Vs> { return requires { mem::allocator::stack<T, Vs...>{}; }; }.template operator()<int, sizeof(int) * 8u>());
+    static_assert([]<class T, auto... Vs> { return requires { mem::allocator::stack<T, Vs...>{}; }; }.template operator()<int, alignof(int)>());
+    static_assert(sizeof(mem::allocator::stack<int, 16u>) >= sizeof(std::array<std::byte, 16u>));
   }
 
   #if __has_include(<sys/mman.h>)
-  // mem::huge_pages
+  // mem::allocator::huge_pages
   {
-    struct empty { };
-    static_assert([]<class T, auto... Vs> { return requires { mem::huge_pages<T, Vs...>{}; }; }.template operator()<int>());
-    static_assert([]<class T, auto... Vs> { return requires { mem::huge_pages<T, Vs...>{}; }; }.template operator()<int, 32u>());
-    static_assert(sizeof(empty) == sizeof(mem::huge_pages<int>));
-    mem::huge_pages<int> allocator{};
+    static_assert([]<class T, auto... Vs> { return requires { mem::allocator::huge_pages<T, Vs...>{}; }; }.template operator()<int>());
+    static_assert([]<class T, auto... Vs> { return requires { mem::allocator::huge_pages<T, Vs...>{}; }; }.template operator()<int, 32u>());
+    static_assert(sizeof(empty) == sizeof(mem::allocator::huge_pages<int>));
+    mem::allocator::huge_pages<int> allocator{};
     static_assert(1u << 21u == allocator.size);
   }
   #endif
 
   #if __has_include(<sys/mman.h>) and __has_include(<cstdlib>)
-  // mem::transparent_huge_pages
+  // mem::allocator::transparent_huge_pages
   {
-    struct empty { };
-    static_assert([]<class T, auto... Vs> { return requires { mem::transparent_huge_pages<T, Vs...>{}; }; }.template operator()<int>());
-    static_assert([]<class T, auto... Vs> { return requires { mem::transparent_huge_pages<T, Vs...>{}; }; }.template operator()<int, 32u>());
-    static_assert(sizeof(empty) == sizeof(mem::huge_pages<int>));
-    mem::transparent_huge_pages<int> allocator{};
+    static_assert([]<class T, auto... Vs> { return requires { mem::allocator::transparent_huge_pages<T, Vs...>{}; }; }.template operator()<int>());
+    static_assert([]<class T, auto... Vs> { return requires { mem::allocator::transparent_huge_pages<T, Vs...>{}; }; }.template operator()<int, 32u>());
+    static_assert(sizeof(empty) == sizeof(mem::allocator::huge_pages<int>));
+    mem::allocator::transparent_huge_pages<int> allocator{};
     static_assert(1u << 21u == allocator.size);
   }
   #endif
 
   #if __has_include(<numa.h>)
-  // mem::numa
+  // mem::allocator::numa
   {
-    static_assert([]<class T, auto... Vs> { return requires { mem::numa<T, Vs...>{}; }; }.template operator()<int>());
-    static_assert([]<class T, auto... Vs> { return requires { mem::numa<T, Vs...>{}; }; }.template operator()<int, 32u>());
-    static_assert(sizeof(mem::numa<int>::node_type) == sizeof(mem::numa<int>));
+    static_assert([]<class T, auto... Vs> { return requires { mem::allocator::numa<T, Vs...>{}; }; }.template operator()<int>());
+    static_assert([]<class T, auto... Vs> { return requires { mem::allocator::numa<T, Vs...>{}; }; }.template operator()<int, 32u>());
   }
   #endif
 }(), true));

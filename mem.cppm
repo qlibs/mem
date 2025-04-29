@@ -26,10 +26,14 @@ module;
 export module mem;
 
 export namespace mem {
-  using mem::allocator;
-  using mem::stack;
-  using mem::huge_pages;
-  using mem::numa;
+  using mem::allocator_like;
+  inline namespace allocator {
+    using mem::allocator::aligned;
+    using mem::allocator::stack;
+    using mem::allocator::transparent_huge_pages;
+    using mem::allocator::huge_pages;
+    using mem::allocator::numa;
+  } // namespace allocator
 } // namespace mem
 
 // -*- mode: c++; -*-
