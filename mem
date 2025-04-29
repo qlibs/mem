@@ -25,7 +25,7 @@
 // -->
 [Overview](#Overview) / [API](#API) / [FAQ](#FAQ) / [Resources](#Resources)
 
-## MEM: Memory Allocator library
+## `mem`: Memory Allocator library
 
 [![MIT Licence](http://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/license/mit)
 [![Version](https://img.shields.io/github/v/release/qlibs/mem)](https://github.com/qlibs/mem/releases)
@@ -50,7 +50,6 @@
 import mem;
 
 int main() {
-  /// concepts
   static_assert(mem::allocator_like<std::allocator<int>>);
   static_assert(mem::allocator_like<mem::allocator::aligned<int, std::align_val_t(64u)>>);
   static_assert(mem::allocator_like<mem::allocator::stack<int, 1024u>>);
@@ -58,15 +57,16 @@ int main() {
   static_assert(mem::allocator_like<mem::allocator::huge_pages<int>>);
   static_assert(mem::allocator_like<mem::allocator::numa<int>>);
 
-  /// usage
-  std::vector<int, mem::allocator::aligned<int, std::align_val_t(64u)>> v{};
-  std::vector<int, mem::allocator::stack<int, 1024u>> v{};
-  /// echo 20 > /proc/sys/vm/nr_hugepages
-  std::vector<int, mem::allocator::huge_pages<int>> v{};
-  /// echo always > /sys/kernel/mm/transparent_hugepage/hugepages-2048kB/enabled
-  std::vector<int, mem::allocator::transparent_huge_pages<int>> v{};
-  /// -lnuma (requires libnuma-dev)
-  std::vector<int, mem::allocator::numa<int>> v{};
+  {
+    std::vector<int, mem::allocator::aligned<int, std::align_val_t(64u)>> v{};
+    std::vector<int, mem::allocator::stack<int, 1024u>> v{};
+    /// echo 20 > /proc/sys/vm/nr_hugepages
+    std::vector<int, mem::allocator::huge_pages<int>> v{};
+    /// echo always > /sys/kernel/mm/transparent_hugepage/hugepages-2048kB/enabled
+    std::vector<int, mem::allocator::transparent_huge_pages<int>> v{};
+    /// -lnuma (requires libnuma-dev)
+    std::vector<int, mem::allocator::numa<int>> v{};
+  }
 }
 ```
 
@@ -76,18 +76,16 @@ int main() {
 
 ### FAQ
 
-> How to disable running tests at compile-time?
->
+> How to disable running tests at compile-time? <br />
 >   When `-DNTEST` is defined static_asserts tests wont be executed upon inclusion.
 >   Note: Use with caution as disabling tests means that there are no gurantees upon inclusion that given compiler/env combination works as expected.
 >
-> Similar projects?
->
+> Similar projects? <br />
 >   [std::pmr](https://en.cppreference.com/w/cpp/header/memory)
 
 ### Resources
 
-> `std::allocator` <br />
+> **std::allocator** <br />
 > https://eel.is/c++draft/allocator.requirements <br />
 > https://en.cppreference.com/w/cpp/memory/allocator <br />
 
@@ -96,14 +94,14 @@ int main() {
 > https://man7.org/linux/man-pages/man2/madvise.2.html <br />
 > https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/6/html/performance_tuning_guide/s-memory-transhuge <br />
 
-> `Huge Pages` <br />
+> **Huge Pages** <br />
 > https://www.kernel.org/doc/html/latest/admin-guide/mm/hugetlbpage.html <br />
 > https://www.man7.org/linux/man-pages/man2/mmap.2.html <br />
 > https://www.intel.com/content/www/us/en/docs/programmable/683840/1-2-1/enabling-hugepages.html <br />
 > https://github.com/libhugetlbfs/libhugetlbfs <br />
 > https://wiki.debian.org/Hugepages <br />
 
-> `Non Uniform Memory Access` <br />
+> **Non Uniform Memory Access** <br />
 > https://en.wikipedia.org/wiki/Non-uniform_memory_access <br />
 > https://man7.org/linux/man-pages/man3/numa.3.html <br />
 > https://www.intel.com/content/www/us/en/developer/articles/technical/use-intel-quickassist-technology-efficiently-with-numa-awareness.html <br />
