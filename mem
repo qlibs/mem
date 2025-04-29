@@ -47,6 +47,8 @@
 ### Overview
 
 ```cpp
+import mem;
+
 int main() {
   /// concepts
   static_assert(mem::allocator_like<std::allocator<int>>);
