@@ -77,15 +77,15 @@ int main() {
 ### FAQ
 
 > How to disable running tests at compile-time? <br />
->   When `-DNTEST` is defined static_asserts tests wont be executed upon inclusion.
+> - When `-DNTEST` is defined static_asserts tests wont be executed upon inclusion.
 >   Note: Use with caution as disabling tests means that there are no gurantees upon inclusion that given compiler/env combination works as expected.
 >
 > Similar projects? <br />
->   [std::pmr](https://en.cppreference.com/w/cpp/header/memory)
+> - [std::pmr](https://en.cppreference.com/w/cpp/header/memory)
 
 ### Resources
 
-> **std::allocator** <br />
+> `std::allocator` <br />
 > https://eel.is/c++draft/allocator.requirements <br />
 > https://en.cppreference.com/w/cpp/memory/allocator <br />
 
