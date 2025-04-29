@@ -70,7 +70,8 @@ export namespace mem {
      *   class T,
      *   std::size_t N,
      *   std::align_val_t alignment = alignof(T),
-     *   auto on_error = [] { return nullptr; }> requires
+     *   auto on_error = [] { return nullptr; }
+     * > requires
      *     (std::has_single_bit(std::size_t(alignment))) and
      *     (std::size_t(alignment) <= alignof(std::max_align_t)) and
      *     (not (N % std::size_t(alignment)))
@@ -96,8 +97,8 @@ export namespace mem {
     /**
      * template<class T,
      *   std::size_t N = (1u << 21u),
-     *   auto on_error = [] { return nullptr; }>
-     * struct transparent_huge_pages {
+     *   auto on_error = [] { return nullptr; }
+     * > struct transparent_huge_pages {
      *   using value_type = T;
      *
      *   constexpr transparent_huge_pages() noexcept = default;
@@ -117,7 +118,11 @@ export namespace mem {
     using mem::allocator::transparent_huge_pages;
 
     /**
-     * struct huge_pages {
+     * template <
+     *   class T,
+     *   std::size_t N = (1u << 21u),
+     *   auto on_error = [] { return nullptr; }
+     * > struct huge_pages {
      *   using value_type = T;
      *
      *   constexpr huge_pages() noexcept = default;
