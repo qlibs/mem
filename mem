@@ -38,7 +38,7 @@
 
 - Single header (https://raw.githubusercontent.com/qlibs/mem/main/mem) / C++20 module (https://raw.githubusercontent.com/qlibs/mem/main/mem.cppm)
 - [C++23](https://eel.is/c++draft/allocator.requirements) standard compliant [API](#api)
-- Verifies itself upon include (can be disabled with `-DNTEST` - see [FAQ](#faq))
+- Verifies itself upon `include/import` (can be disabled with `-DNTEST` - see [FAQ](#faq))
 
 ### Requirements
 
