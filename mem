@@ -72,43 +72,43 @@ int main() {
 
 ### API
 
-> https://github.com/qlibs/mem/blob/main/mem.cppm
+> - https://github.com/qlibs/mem/blob/main/mem.cppm
 
 ### FAQ
 
-> **How to disable running tests at compile-time?** <br />
-> When `-DNTEST` is defined static_asserts tests wont be executed upon inclusion.
-> Note: Use with caution as disabling tests means that there are no gurantees upon inclusion that given compiler/env combination works as expected.
+> - How to disable running tests at compile-time? <br />
+>   When `-DNTEST` is defined static_asserts tests wont be executed upon inclusion.
+>   Note: Use with caution as disabling tests means that there are no gurantees upon inclusion that given compiler/env combination works as expected.
 >
-> **Similar projects?** <br />
-> [std::pmr](https://en.cppreference.com/w/cpp/header/memory)
+> - Similar projects? <br />
+>   [std::pmr](https://en.cppreference.com/w/cpp/header/memory)
 
 ### Resources
 
-> `std::allocator` <br />
-> https://eel.is/c++draft/allocator.requirements <br />
-> https://en.cppreference.com/w/cpp/memory/allocator <br />
+> `std::allocator`
+> - https://eel.is/c++draft/allocator.requirements
+> - https://en.cppreference.com/w/cpp/memory/allocator
 
-> **Transparent Huge Pages** <br />
-> https://www.kernel.org/doc/html/latest/admin-guide/mm/transhuge.html <br />
-> https://man7.org/linux/man-pages/man2/madvise.2.html <br />
-> https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/6/html/performance_tuning_guide/s-memory-transhuge <br />
+> **Transparent Huge Pages**
+> - https://www.kernel.org/doc/html/latest/admin-guide/mm/transhuge.html
+> - https://man7.org/linux/man-pages/man2/madvise.2.html
+> - https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/6/html/performance_tuning_guide/s-memory-transhuge
 
-> **Huge Pages** <br />
-> https://www.kernel.org/doc/html/latest/admin-guide/mm/hugetlbpage.html <br />
-> https://www.man7.org/linux/man-pages/man2/mmap.2.html <br />
-> https://www.intel.com/content/www/us/en/docs/programmable/683840/1-2-1/enabling-hugepages.html <br />
-> https://github.com/libhugetlbfs/libhugetlbfs <br />
-> https://wiki.debian.org/Hugepages <br />
+> **Huge Pages**
+> - https://www.kernel.org/doc/html/latest/admin-guide/mm/hugetlbpage.html
+> - https://www.man7.org/linux/man-pages/man2/mmap.2.html
+> - https://www.intel.com/content/www/us/en/docs/programmable/683840/1-2-1/enabling-hugepages.html
+> - https://github.com/libhugetlbfs/libhugetlbfs
+> - https://wiki.debian.org/Hugepages
 
-> **Non Uniform Memory Access** <br />
-> https://en.wikipedia.org/wiki/Non-uniform_memory_access <br />
-> https://man7.org/linux/man-pages/man3/numa.3.html <br />
-> https://www.intel.com/content/www/us/en/developer/articles/technical/use-intel-quickassist-technology-efficiently-with-numa-awareness.html <br />
+> **Non Uniform Memory Access**
+> - https://en.wikipedia.org/wiki/Non-uniform_memory_access
+> - https://man7.org/linux/man-pages/man3/numa.3.html
+> - https://www.intel.com/content/www/us/en/developer/articles/technical/use-intel-quickassist-technology-efficiently-with-numa-awareness.html
 
 ### License
 
-> [MIT](LICENSE)
+> - [MIT](LICENSE)
 
 <!--
 #endif
